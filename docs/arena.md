@@ -6,7 +6,7 @@ Status 2026-09-24. Launch: `ros2 launch pluto_x_bringup arena.launch.py`.
 
 | Piece | Where |
 |---|---|
-| Balloon mesh: the repository's `balloon.stl`, normalised to unit diameter with the origin at its centre; surface profile extracted for touch detection | `pluto_x_gazebo/tools/prepare_balloon_mesh.py` → `models/balloon/{meshes/balloon_unit.stl, profile.yaml}` |
+| Balloon mesh: the source `simulation_engine/pluto_x_gazebo/models/balloon/meshes/balloon.stl`, normalised to unit diameter with the origin at its centre; surface profile extracted for touch detection | `pluto_x_gazebo/tools/prepare_balloon_mesh.py` → `models/balloon/{meshes/balloon_unit.stl, profile.yaml}` |
 | Arena definition: balloons (colour, position), points per colour, time limit, vehicle contact radius | `pluto_x_gazebo/config/arena_default.yaml` |
 | Arena world: field with a 10 m × 10 m boundary, take-off pad, lighting, rendering (Sensors system) | `pluto_x_gazebo/worlds/balloon_arena.sdf.xacro` |
 | Arena logic (Gazebo-free, unit-tested): balloon surface geometry, pop rule, score, run clock | `pluto_x_core/arena/{balloon_shape,arena_scoring}` |

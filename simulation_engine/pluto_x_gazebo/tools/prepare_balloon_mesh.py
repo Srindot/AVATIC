@@ -2,7 +2,8 @@
 """Normalises a balloon STL for the arena and extracts its profile.
 
 Input: an upright balloon mesh (axis along +z, neck at the bottom), any
-units, any offset (e.g. the repository's balloon.stl).
+units, any offset (e.g. models/balloon/meshes/balloon.stl, the source
+mesh of the arena balloons).
 Output:
   <out>/meshes/balloon_unit.stl  binary STL, UNIT DIAMETER (max width 1),
                                  axis = z, origin = centre of the bounding
@@ -18,6 +19,8 @@ meridian plane), so the popping geometry follows the actual mesh, not a
 sphere.
 
 Usage: prepare_balloon_mesh.py <balloon.stl> <out_dir> [--slices N]
+  e.g. (from pluto_x_gazebo/):
+  tools/prepare_balloon_mesh.py models/balloon/meshes/balloon.stl models/balloon
 """
 
 import argparse

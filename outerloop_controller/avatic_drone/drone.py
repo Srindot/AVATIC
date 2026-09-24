@@ -60,17 +60,27 @@ except ImportError as error:  # pragma: no cover - environment problem
         f'({error})') from error
 
 COMMAND_RATE_HZ = 50.0        # stick commands are streamed at the MSP rate
-COMMAND_TIMEOUT_S = 0.5       # no send_command() for this long -> sticks neutral, throttle 0
+COMMAND_TIMEOUT_S = 0.5       # no send_command() for this long -> failsafe (see below)
+# failsafe throttle: a running average of the throttle sent (~hover when
+# flying level), limited to this range
+HOVER_ESTIMATE_TIME_CONSTANT_S = 2.0
+FAILSAFE_THROTTLE_RANGE = (0.6, 0.85)
+DEFAULT_HOVER_THROTTLE = 0.76
 ARM_TIMEOUT_S = 3.0
 
 
 @dataclass(frozen=True)
 class Frame:
-    """One camera image. image: H x W x 3 uint8, RGB."""
+    """One camera image. image: H x W x 3 uint8, RGB.
+
+    seq counts frames from 1; the camera (~18 Hz) is slower than a typical
+    control loop, so compare seq to skip frames you have already processed.
+    """
     image: np.ndarray
     time_s: float
     width: int
     height: int
+    seq: int
 
 
 @dataclass(frozen=True)
@@ -108,12 +118,14 @@ class _Link(Node):
             Parameter('use_sim_time', Parameter.Type.BOOL, True)])
         self.lock = threading.Lock()
         self.image_msg = None
+        self.image_seq = 0
         self.status = None
         self.arena = ArenaStatus()
         self.command = StickCommand()
         self.arm_switch = False
         self.last_command_s = None
         self.timed_out = False
+        self.hover_estimate = DEFAULT_HOVER_THROTTLE
         qos = QoSProfile(depth=10)
         self.create_subscription(Image, '/pluto/camera/image_raw', self._on_image,
                                  qos_profile_sensor_data)
@@ -133,6 +145,7 @@ class _Link(Node):
     def _on_image(self, msg):
         with self.lock:
             self.image_msg = msg
+            self.image_seq += 1
 
     def _on_status(self, msg):
         with self.lock:
@@ -162,11 +175,18 @@ class _Link(Node):
             command, arm = self.command, self.arm_switch
             if (self.last_command_s is not None and
                     now - self.last_command_s > COMMAND_TIMEOUT_S):
+                low, high = FAILSAFE_THROTTLE_RANGE
+                hover = min(max(self.hover_estimate, low), high)
                 if not self.timed_out:
                     self.get_logger().warn(
-                        f'no send_command() for {COMMAND_TIMEOUT_S} s: sticks neutral, throttle 0')
+                        f'no send_command() for {COMMAND_TIMEOUT_S} s: failsafe - sticks level, '
+                        f'no yaw, throttle {hover:.2f} (estimated hover)')
                     self.timed_out = True
-                command = StickCommand()
+                command = StickCommand(throttle=hover)
+            elif arm and not command.altitude_hold:
+                # running average of the throttle sent while armed: ~hover
+                alpha = min((1.0 / COMMAND_RATE_HZ) / HOVER_ESTIMATE_TIME_CONSTANT_S, 1.0)
+                self.hover_estimate += alpha * (command.throttle - self.hover_estimate)
         rc = to_rc(command, arm)
         msg = RcCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -205,11 +225,17 @@ class Drone:
     def get_frame(self) -> Optional[Frame]:
         """Latest camera image (RGB, H x W x 3 uint8), or None before the first."""
         with self._link.lock:
-            msg = self._link.image_msg
+            msg, seq = self._link.image_msg, self._link.image_seq
         if msg is None:
             return None
-        image = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, 3)
-        return Frame(image=image.copy(), time_s=msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9,
+        if msg.encoding not in ('rgb8', 'bgr8'):
+            raise RuntimeError(f'unexpected camera encoding {msg.encoding!r}')
+        rows = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.step)
+        image = rows[:, :msg.width * 3].reshape(msg.height, msg.width, 3)  # drop row padding
+        if msg.encoding == 'bgr8':
+            image = image[..., ::-1]
+        return Frame(image=np.ascontiguousarray(image), seq=seq,
+                     time_s=msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9,
                      width=msg.width, height=msg.height)
 
     def get_telemetry(self) -> Optional[Telemetry]:
@@ -241,8 +267,9 @@ class Drone:
                      altitude_hold: bool = False) -> None:
         """Stick command, held until the next call (see the module docstring
         for the meaning and range of each value; out-of-range values are
-        clipped). Call it at least every 0.5 s: otherwise the sticks go
-        neutral with throttle 0 (as if the link was lost)."""
+        clipped). Call it at least every 0.5 s: otherwise a failsafe levels
+        the sticks, stops the yaw and sets the throttle to an estimate of
+        hover (the average of your recent throttle) until the next call."""
         for name, value in (('roll', roll), ('pitch', pitch), ('yaw_rate', yaw_rate),
                             ('throttle', throttle)):
             if not math.isfinite(value):
@@ -274,7 +301,7 @@ class Drone:
         with self._link.lock:
             self._link.arm_switch = True
         deadline = time.monotonic() + ARM_TIMEOUT_S * 3
-        while not (self.get_telemetry() and self.get_telemetry().armed):
+        while not getattr(self.get_telemetry(), 'armed', False):
             self.send_command(throttle=0.0)
             if time.monotonic() > deadline:
                 raise RuntimeError('the flight controller did not arm '
@@ -307,21 +334,30 @@ class Drone:
             raise ValueError('hz must be > 0')
         period, step = 1.0 / hz, 0
         next_t = self.time()
+        warned = False
         while self.running():
             yield step
             step += 1
             next_t += period
+            now = self.time()
+            if now > next_t + period:  # the body took longer than a period:
+                missed = int((now - next_t) / period)
+                next_t += missed * period  # skip, don't burst to catch up
+                if not warned:
+                    print(f'[avatic_drone] loop({hz:g} Hz): an iteration took longer than '
+                          f'{period * 1000:.0f} ms of sim time; skipping missed periods')
+                    warned = True
             while self.time() < next_t and self.running():
                 time.sleep(0.001)
 
     def close(self) -> None:
         """Disarms and disconnects."""
         self.disarm()
-        time.sleep(0.1)
-        self._executor.shutdown()
+        time.sleep(0.1)  # let the disarm command go out
+        self._executor.shutdown(timeout_sec=1.0)
+        self._thread.join(timeout=2.0)  # stop the ROS thread before shutdown
         self._link.destroy_node()
-        if rclpy.ok():
-            rclpy.try_shutdown()
+        rclpy.try_shutdown()
 
     def __enter__(self):
         return self

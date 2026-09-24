@@ -34,7 +34,8 @@ vehicle:
     - {position_flu_m: [ 0.030,   0.0,    0.015], radius_m: 0.015}
 
 balloon:
-  # [ASSUMPTION] a standard 12-inch party balloon. The mesh (balloon.stl)
+  # [ASSUMPTION] a standard 12-inch party balloon. The mesh
+  # (models/balloon/meshes/balloon.stl)
   # has no units; it is scaled to this maximum width. Height = 1.5 x width.
   diameter_m: 0.30
 

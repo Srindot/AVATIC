@@ -67,7 +67,10 @@ drone.close()
 **Camera:** `drone.get_frame()` returns a `Frame` with:
 - `.image`: NumPy array, 720 × 1280 × 3, uint8, RGB (for OpenCV, convert
   with `cv2.cvtColor(frame.image, cv2.COLOR_RGB2BGR)`);
-- `.time_s`: when the frame was taken.
+- `.time_s`: when the frame was taken;
+- `.seq`: the frame number. The camera (about 18 fps) is slower than a
+  typical control loop, so compare `seq` to skip frames you have already
+  processed.
 
 The camera is about 18 frames per second, forward-facing, about 80° field
 of view. In the simulator frames arrive without delay; on the real drone
@@ -98,7 +101,12 @@ There is no position or velocity: the real drone doesn't have them either.
 
 Roll and pitch are angles the firmware holds; only yaw is a rate. This is
 exactly what the real Pluto X accepts. If you stop calling `send_command`
-for 0.5 s, the sticks go neutral with throttle 0.
+for 0.5 s, a failsafe levels the sticks, stops the yaw and sets the
+throttle to an estimate of hover (the average of your recent throttle)
+until your next call.
+
+Use only one `Drone()` per run: two scripts sending commands at once would
+fight over the drone.
 
 **Arena and time:**
 - `drone.arena()` returns the `.score`, `.time_remaining_s`, `.finished`
