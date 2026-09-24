@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<!--
+  Pluto X legacy-stack model (SDFormat, processed with xacro).
+
+  Mass, inertia and contact geometry are read from the SAME YAML file that
+  the VehicleSystem plugin loads, so the two cannot silently diverge
+  (the plugin additionally verifies them at start-up).
+
+  Structure (preliminary): a single rigid link, base_link, carrying all mass.
+  Motors, propellers, guards and cap are visual-only; the legacy model
+  applies the rotor wrench at the centre of mass, so rotor links would add
+  nothing to the dynamics yet. Visual geometry follows the legacy URDF
+  (PlutoX-ROS-Joystick-Control/urdf/pluto.xacro).
+
+  LICENSE NOTE: the meshes are copied from PlutoX-ROS-Joystick-Control,
+  which ships without a license. Clarify before redistribution.
+
+  Usage:
+    xacro model.sdf.xacro config_file:=/abs/path/pluto_x_estimated.yaml \
+          [flight_controller:=legacy|magisv2]   (empty: from the YAML)
+-->
+<sdf version="1.10" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="config_file" default=""/>
+  <xacro:arg name="model_name" default="pluto_x"/>
+  <xacro:arg name="flight_controller" default=""/>
+
+  <xacro:property name="cfg" value="${xacro.load_yaml('$(arg config_file)')}"/>
+  <xacro:property name="vehicle" value="${cfg['vehicle']}"/>
+  <xacro:property name="inertia" value="${vehicle['inertia_kg_m2']}"/>
+  <xacro:property name="geometry" value="${cfg['gazebo_model']}"/>
+  <xacro:property name="box" value="${geometry['collision_box_m']}"/>
+  <xacro:property name="vz" value="${geometry['visual_offset_z_m']}"/>
+  <xacro:property name="mesh_root" value="model://pluto_x/meshes"/>
+
+  <!-- Legacy URDF layout: motors at (+/-46 mm, +/-46 mm). -->
+  <xacro:property name="motor_offset_m" value="0.046"/>
+
+  <xacro:macro name="mesh_visual" params="name mesh scale x y z roll:=0 pitch:=0 yaw:=0 colour">
+    <visual name="${name}">
+      <pose>${x} ${y} ${z + vz} ${roll} ${pitch} ${yaw}</pose>
+      <geometry>
+        <mesh>
+          <uri>${mesh_root}/${mesh}</uri>
+          <scale>${scale} ${scale} ${scale}</scale>
+        </mesh>
+      </geometry>
+      <material>
+        <ambient>${colour}</ambient>
+        <diffuse>${colour}</diffuse>
+      </material>
+    </visual>
+  </xacro:macro>
+
+  <!-- One motor + propeller + guard. sx, sy: signs of the motor position. -->
+  <xacro:macro name="rotor_visuals" params="index sx sy prop_mesh prop_z guard_yaw">
+    <xacro:mesh_visual name="motor_${index}" mesh="motors.dae" scale="0.01"
+                       x="${sx * motor_offset_m}" y="${sy * motor_offset_m}" z="0"
+                       colour="0.4 0.4 0.4 1"/>
+    <!-- Propeller: its 55 mm disc [SRC], translucent (the legacy prop mesh
+         is 20 mm long). prop_mesh/prop_z are kept for the macro calls. -->
+    <visual name="propeller_${index}">
+      <pose>${sx * motor_offset_m} ${sy * motor_offset_m} ${0.007 + vz + 0.02} 0 0 0</pose>
+      <geometry><cylinder><radius>0.0275</radius><length>0.001</length></cylinder></geometry>
+      <transparency>0.5</transparency>
+      <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+    </visual>
+    <xacro:mesh_visual name="guard_${index}" mesh="guard.stl" scale="0.03"
+                       x="${sx * (motor_offset_m + 0.0195)}"
+                       y="${sy * (motor_offset_m + 0.0195)}" z="0.03"
+                       pitch="${-pi / 2}" yaw="${guard_yaw}"
+                       colour="0.1 0.1 0.1 1"/>
+  </xacro:macro>
+
+  <model name="$(arg model_name)">
+    <link name="base_link">
+      <!-- Inertial frame MUST coincide with the link frame: the plugin
+           applies the wrench at the link origin and checks this. -->
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>${vehicle['mass_kg']}</mass>
+        <inertia>
+          <ixx>${inertia['xx']}</ixx>
+          <iyy>${inertia['yy']}</iyy>
+          <izz>${inertia['zz']}</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
+      <collision name="body_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>${box['x']} ${box['y']} ${box['z']}</size></box>
+        </geometry>
+      </collision>
+
+      <xacro:mesh_visual name="body" mesh="body.dae" scale="0.01"
+                         x="0" y="0" z="0" colour="0.15 0.15 0.15 1"/>
+      <xacro:mesh_visual name="cap" mesh="cap.dae" scale="0.0088"
+                         x="0" y="-0.008" z="0.027" colour="0.05 0.05 0.05 1"/>
+      <xacro:rotor_visuals index="1" sx="-1" sy="-1" prop_mesh="prop1.dae"
+                           prop_z="0.025" guard_yaw="${-pi / 4}"/>
+      <xacro:rotor_visuals index="2" sx="-1" sy="1" prop_mesh="prop.dae"
+                           prop_z="0.025" guard_yaw="${-3 * pi / 4}"/>
+      <xacro:rotor_visuals index="3" sx="1" sy="-1" prop_mesh="prop.dae"
+                           prop_z="0.025" guard_yaw="${pi / 4}"/>
+      <xacro:rotor_visuals index="4" sx="1" sy="1" prop_mesh="prop.dae"
+                           prop_z="0.023" guard_yaw="${3 * pi / 4}"/>
+
+      <!-- Ideal IMU (no noise), published for observation only; the legacy
+           controller uses the full rigid-body state, as kwad.cpp did.
+           ASSUMPTION: 100 Hz, mounted at the centre of mass. -->
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <topic>/pluto/imu</topic>
+      </sensor>
+
+      <!-- Forward camera, from the vehicle YAML `camera` section (absent in
+           the legacy kwad.cpp config). SDF pose pitch + = tilted down. -->
+      <xacro:if value="${'camera' in cfg and cfg['camera']['enabled']}">
+        <xacro:property name="cam" value="${cfg['camera']}"/>
+        <xacro:property name="cam_pos" value="${cam['position_flu_m']}"/>
+        <visual name="camera_lens">
+          <pose>${cam_pos['x']} ${cam_pos['y']} ${cam_pos['z']} 0 ${radians(cam['tilt_down_deg']) + pi / 2} 0</pose>
+          <geometry><cylinder><radius>0.005</radius><length>0.006</length></cylinder></geometry>
+          <material><ambient>0.02 0.02 0.02 1</ambient><diffuse>0.02 0.02 0.02 1</diffuse></material>
+        </visual>
+        <sensor name="front_camera" type="camera">
+          <pose>${cam_pos['x']} ${cam_pos['y']} ${cam_pos['z']} 0 ${radians(cam['tilt_down_deg'])} 0</pose>
+          <always_on>true</always_on>
+          <update_rate>${cam['rate_hz']}</update_rate>
+          <visualize>false</visualize>
+          <topic>${cam['topic']}</topic>
+          <camera>
+            <horizontal_fov>${radians(cam['horizontal_fov_deg'])}</horizontal_fov>
+            <image>
+              <width>${cam['width_px']}</width>
+              <height>${cam['height_px']}</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip><near>${cam['clip_near_m']}</near><far>${cam['clip_far_m']}</far></clip>
+            <noise><type>gaussian</type><mean>0.0</mean><stddev>${cam['noise_std']}</stddev></noise>
+          </camera>
+        </sensor>
+      </xacro:if>
+    </link>
+
+    <plugin filename="pluto_x_vehicle_system"
+            name="pluto_x_gazebo::VehicleSystem">
+      <config_file>$(arg config_file)</config_file>
+      <flight_controller>$(arg flight_controller)</flight_controller>
+      <link_name>base_link</link_name>
+      <rc_topic>/pluto/rc</rc_topic>
+      <telemetry_topic>/pluto/fc_telemetry</telemetry_topic>
+      <battery_topic>/pluto/battery</battery_topic>
+    </plugin>
+
+    <!-- Ground truth for developers/tests only (/sim namespace). Never part
+         of the participant interface. -->
+    <plugin filename="gz-sim-odometry-publisher-system"
+            name="gz::sim::systems::OdometryPublisher">
+      <odom_frame>world</odom_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <odom_topic>/sim/pluto/odometry</odom_topic>
+      <odom_publish_frequency>100</odom_publish_frequency>
+      <dimensions>3</dimensions>
+    </plugin>
+  </model>
+</sdf>

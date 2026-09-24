@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pluto_x_gazebo</name>
+  <version>0.1.0</version>
+  <description>
+    Gazebo Harmonic integration for the Pluto X simulation: the
+    VehicleSystem plugin (glue around pluto_x_core and the MagisV2
+    firmware in pluto_x_magisv2), the vehicle
+    model and test worlds.
+  </description>
+  <maintainer email="srinath.bhamidipati@research.iiit.ac.in">srindot</maintainer>
+  <!-- The plugin links pluto_x_magisv2 (GPL-3.0-or-later). -->
+  <license>GPL-3.0-or-later</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>pluto_x_core</depend>
+  <depend>pluto_x_magisv2</depend>
+  <!-- Gazebo Harmonic (gz-sim8, gz-transport13, gz-msgs10, gz-plugin2,
+       gz-common5) is provided by ros-humble-ros-gzharmonic in the dev image;
+       no rosdep keys are declared for these system libraries. -->
+  <exec_depend>xacro</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,29 @@
+# ros_gz_bridge configuration for the legacy-stack simulation.
+#
+# /pluto/*      vehicle-facing topics (IMU, battery)
+# /sim/pluto/*  simulator ground truth, for developers and tests only.
+#               Never part of the participant interface.
+
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/pluto/imu"
+  gz_topic_name: "/pluto/imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/sim/pluto/odometry"
+  gz_topic_name: "/sim/pluto/odometry"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/pluto/battery"
+  gz_topic_name: "/pluto/battery"
+  ros_type_name: "sensor_msgs/msg/BatteryState"
+  gz_type_name: "gz.msgs.BatteryState"
+  direction: GZ_TO_ROS

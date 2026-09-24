@@ -1,0 +1,15 @@
+# Parameters of pluto_x_autonomy.examples.waypoint:WaypointController.
+# Waypoints: ENU metres relative to the take-off point (x east, y north, z up).
+waypoints_enu_m:
+  - [0.0, 0.0, 1.0]   # climb
+  - [1.0, 0.0, 1.0]   # 1 m east
+  - [1.0, 1.0, 1.0]   # 1 m north
+  - [0.0, 1.0, 1.0]
+  - [0.0, 0.0, 1.0]   # back over the take-off point, then the host lands
+acceptance_radius_m: 0.15
+acceptance_speed_m_s: 0.2
+hold_time_s: 1.0
+max_speed_m_s: 0.8
+max_tilt_deg: 15.0
+tilt_per_stick_deg: 32.0     # measured in the simulator; measure on hardware
+hover_throttle: 0.76         # start of the throttle integrator (sim, with camera: ~1760 us)

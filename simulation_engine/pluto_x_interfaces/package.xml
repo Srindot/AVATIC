@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pluto_x_interfaces</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 2 messages of the Pluto X vehicle interface (RC commands). Shared by
+    the simulator and the future hardware bridge.
+  </description>
+  <maintainer email="srinath.bhamidipati@research.iiit.ac.in">srindot</maintainer>
+  <license>TBD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <depend>std_msgs</depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

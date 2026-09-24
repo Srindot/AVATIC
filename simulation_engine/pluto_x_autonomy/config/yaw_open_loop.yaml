@@ -1,0 +1,15 @@
+# pluto_x_autonomy.examples.yaw_open_loop:YawOpenLoopTest
+# Open-loop yaw-stick steps while position and altitude are held.
+hover_enu_m: [0.0, 0.0, 1.0]
+settle_s: 6.0
+steps:            # [yaw stick (+ = clockwise), duration s]
+  - [0.1, 4.0]
+  - [0.0, 3.0]
+  - [0.2, 4.0]
+  - [0.0, 3.0]
+  - [0.4, 4.0]
+  - [0.0, 3.0]
+  - [-0.4, 4.0]
+  - [0.0, 3.0]
+  - [1.0, 3.0]
+  - [0.0, 4.0]

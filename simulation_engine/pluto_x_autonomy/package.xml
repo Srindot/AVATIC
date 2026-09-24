@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pluto_x_autonomy</name>
+  <version>0.1.0</version>
+  <description>
+    Outer-loop (autonomy) layer of the Pluto X simulation: the
+    OuterLoopController interface that participants implement, the
+    outer_loop_host node that loads a controller by import path and flies it
+    through the flight controller's RC interface (arming, landing and
+    failsafe supervision included), and example controllers.
+  </description>
+  <maintainer email="srinath.bhamidipati@research.iiit.ac.in">srindot</maintainer>
+  <license>TBD</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>pluto_x_interfaces</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

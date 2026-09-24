@@ -1,0 +1,17 @@
+--- a/src/main/mw.cpp	2026-09-24 17:44:16.455253829 +0530
++++ b/src/main/mw.cpp	2026-09-24 17:44:16.468253884 +0530
+@@ -1017,7 +1017,14 @@
+   initRxRefreshRate ( &rxRefreshRate );
+ 
+   filteredCycleTime     = filterApplyPt1 ( cycleTime, &filteredCycleTimeState, 1 );
++#ifdef MAGIS_HOST
++  // MAGIS_HOST: filteredCycleTime is 0 on the first control step. Cortex-M4
++  // UDIV returns 0 for a zero divisor (DIV_0_TRP is not enabled by MagisV2);
++  // x86 traps. Reproduce the ARM result.
++  rcInterpolationFactor = ( filteredCycleTime ? rxRefreshRate / filteredCycleTime : 0 ) + 1;
++#else
+   rcInterpolationFactor = rxRefreshRate / filteredCycleTime + 1;
++#endif
+ 
+   if ( isRXDataNew ) {
+     for ( int channel = 0; channel < 4; channel++ ) {

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pluto_x_demo</name>
+  <version>0.1.0</version>
+  <description>
+    AVATIC workshop demo ("hero" simulation): the Pluto X pops the non-red
+    balloons along a hand-planned route, facing each one. Uses known
+    balloon positions and ground truth - not a challenge solution.
+  </description>
+  <maintainer email="srinath.bhamidipati@research.iiit.ac.in">srindot</maintainer>
+  <license>TBD</license>
+  <exec_depend>pluto_x_autonomy</exec_depend>
+  <exec_depend>pluto_x_bringup</exec_depend>
+  <exec_depend>pluto_x_gazebo</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

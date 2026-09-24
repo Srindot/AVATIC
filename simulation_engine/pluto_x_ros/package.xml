@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pluto_x_ros</name>
+  <version>0.1.0</version>
+  <description>ROS 2 nodes of the Pluto X simulation (fc_link: RC and telemetry link).</description>
+  <maintainer email="srinath.bhamidipati@research.iiit.ac.in">srindot</maintainer>
+  <license>TBD</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>pluto_x_interfaces</depend>
+  <depend>pluto_x_core</depend>
+  <!-- gz-transport13 / gz-msgs10 from ros-humble-ros-gzharmonic -->
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

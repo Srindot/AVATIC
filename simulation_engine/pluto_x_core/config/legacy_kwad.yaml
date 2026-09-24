@@ -1,0 +1,152 @@
+# Legacy kwad.cpp vehicle + controller configuration.
+#
+# PROVENANCE
+#   Every numeric value below is copied from the #defines and globals in
+#   resources/PlutoX-ROS-Joystick-Control/src/kwad.cpp (legacy name given in
+#   brackets). They describe the vehicle kwad.cpp simulated: 1.4 kg with a
+#   0.56 m arm, i.e. a much larger quadrotor than the Pluto X.
+#
+#   ASSUMPTION: none of these values are Pluto X parameters. None have been
+#   measured or identified. They exist so the legacy controller stack can be
+#   reproduced faithfully on the modern ROS 2 / Gazebo foundation.
+#
+# FRAMES
+#   Controller/dynamics quantities are NED world / FRD body, as in kwad.cpp.
+#   The only ENU quantity is pilot.position_hold_target_enu_m.
+#
+# UNITS: SI throughout. Key suffixes state the unit.
+
+vehicle:
+  mass_kg: 1.4                     # [m]
+  gravity_m_s2: 9.81               # [g]   must equal the Gazebo world gravity
+  inertia_kg_m2:                   # principal moments, diagonal tensor assumed
+    xx: 0.05                       # [jx]
+    yy: 0.05                       # [jy]
+    # DEVIATION FROM kwad.cpp: legacy jz = 0.24 violates the rigid-body
+    # triangle inequality (Ixx + Iyy >= Izz; 0.10 < 0.24), so no physical
+    # body has it and Gazebo refuses to load it. Set to the flat-plate limit
+    # Ixx + Iyy, which leaves roll/pitch identical and makes yaw ~2.4x less
+    # inert. The loader rejects non-physical inertia.
+    zz: 0.10                       # [jz] legacy 0.24
+  rotor_inertia_kg_m2: 0.044       # [jp]  gyroscopic term coefficient
+  arm_length_m: 0.56               # [l]
+  legacy_double_arm_torque: true   # [l * u2 in quad_dynamics] kwad.cpp quirk
+  legacy_gyroscopic_form: true     # [-jp p o, +jp q o] kwad.cpp form
+  drag:
+    model: legacy_linear           # F = -c * v (world axes), kwad.cpp
+    linear_ned_n_s_m:
+      north: 0.16481               # [kdx]
+      east: 0.31892                # [kdy]
+      down: 0.0000011              # [kdz]
+    # rotor_and_body model only (unused here):
+    rotor_drag_coefficient_n_s_m_rad: 0.0
+    body_drag_area_frd_m2: {x: 0.0, y: 0.0, z: 0.0}
+    air_density_kg_m3: 1.225
+
+rotor:
+  layout: legacy_plus              # kwad.cpp "+" frame, rotors front/right/rear/left
+  time_constant_s: 0.0             # instantaneous rotor response (kwad.cpp)
+  spin_up_reaction_torque: false   # kwad.cpp ignores rotor acceleration
+  thrust_coefficient_n_s2: 0.000013328      # [kt]  T = kt * w^2
+  yaw_drag_coefficient_n_m_s2: 0.0000013858 # [kd]  Q = kd * w^2
+  speed_squared_min_rad2_s2: 0.0            # [min_motor_speed_2]
+  speed_squared_max_rad2_s2: 855625.0       # [max_motor_speed_2] = 925^2
+
+actuation_limits:
+  thrust_n:
+    min: 0.0                       # [u1_min]
+    max: 43.5                      # [u1_max]
+  torque_n_m:                      # symmetric +/- limits
+    roll: 6.25                     # [u2_max]
+    pitch: 6.25                    # [u3_max]
+    yaw: 2.25                      # [u4_max]
+
+controller:
+  period_s: 0.01                   # [Ts]  (legacy used wall clock; now sim time)
+  position:
+    # DEVIATION FROM kwad.cpp (default). kwad.cpp rotated position/velocity
+    # by the full attitude ("legacy_full_attitude"), which feeds
+    # sin(tilt) * altitude into the horizontal error. kwad.cpp's inverted
+    # ground clamp kept the vehicle at z_ned > 0 where that is stabilising.
+    # Above real ground it destabilises with altitude: on the reference
+    # integrator it holds at 0.5-1 m and diverges for targets >= 2 m.
+    # "yaw_only" (rotate by yaw only, gains unchanged) converged at every
+    # altitude tested (0.5-8 m). See docs/legacy_port.md.
+    error_frame: yaw_only
+    north: {kp: 0.35, ki: 0.25, kd: -0.35, integral_window: 0.25}  # [x_*]
+    east:  {kp: 0.35, ki: 0.25, kd: -0.35, integral_window: 0.25}  # [y_*]
+    down:  {kp: 5.88, ki: 0.0,  kd: -5.05, integral_window: 0.25}  # [z_*]
+    roll_limit_rad: 0.7853         # [phi_max]
+    pitch_limit_rad: 0.7853        # [theta_max]
+  attitude:
+    roll:  {kp: 4.5, ki: 0.0, kd: 0.0, integral_window: 0.0349}    # [phi_*]
+    pitch: {kp: 4.5, ki: 0.0, kd: 0.0, integral_window: 0.0349}    # [theta_*]
+    yaw:   {kp: 4.5, ki: 0.0, kd: 0.0, integral_window: 0.1396}    # [psi_*]
+    body_rate_limit_rad_s:
+      roll: 0.87266                # [p_max]
+      pitch: 0.87266               # [q_max]
+      yaw: 0.87266                 # [r_max]
+  rate:
+    roll:  {kp: 2.7, ki: 1.0, kd: -0.01, integral_window: 0.174532} # [p_*]
+    pitch: {kp: 2.7, ki: 1.0, kd: -0.01, integral_window: 0.174532} # [q_*]
+    yaw:   {kp: 2.7, ki: 1.0, kd: -0.01, integral_window: 0.174532} # [r_*]
+
+pilot:
+  # position_hold (fly to the target) or manual_attitude (constant
+  # hover_thrust, level). There is no pilot input device.
+  initial_mode: position_hold
+  hover_thrust_n: 13.734           # [u1 initial] = m * g
+  # Yaw setpoint = heading at start (heading hold). false = always north
+  # (kwad.cpp psi_des = 0); identical when the vehicle starts facing north.
+  hold_initial_heading: true
+  position_hold_target_enu_m:      # legacy x_des, y_des, z_des = (1, 1, 1),
+    x: 1.0                         # interpreted as ENU with z up, which is
+    y: 1.0                         # what the legacy Gazebo visualisation
+    z: 1.0                         # displayed.
+
+# Clamps applied only by the offline reference integrator (legacy
+# quad_dynamics clamped the *state*). Gazebo physics does not clamp state.
+reference_state_clamps:
+  body_rate_rad_s: {roll: 0.87266, pitch: 0.87266, yaw: 0.87266}   # [p,q,r_max]
+  attitude_rad: {roll: 0.7853, pitch: 0.7853, yaw: 10.0}           # [phi,theta,psi_max]
+
+# Effects that kwad.cpp did not model: all disabled so this file reproduces
+# the legacy behaviour. The values under a disabled section are not used.
+battery:
+  enabled: false
+  capacity_mah: 600.0
+  initial_state_of_charge: 1.0
+  internal_resistance_ohm: 0.0
+  reference_voltage_v: 3.7
+  hover_current_a: 0.0
+  open_circuit_voltage: [[0.0, 3.7], [1.0, 3.7]]
+latency:
+  command_s: 0.0
+state_error:
+  enabled: false
+  seed: 1
+  attitude_bias_std_rad: 0.0
+  attitude_noise_std_rad: 0.0
+  gyro_bias_std_rad_s: 0.0
+  gyro_noise_std_rad_s: 0.0
+wind:
+  enabled: false
+  seed: 2
+  mean_enu_m_s: {x: 0.0, y: 0.0, z: 0.0}
+  gust_std_m_s: 0.0
+  gust_time_constant_s: 1.0
+
+# Visual/contact geometry for the Gazebo model (read by the model xacro only).
+# ASSUMPTION: the collision box is an approximate envelope of the legacy
+# meshes (~97 mm frame), centred on the centre of mass (link origin). It is
+# unrelated to the 1.4 kg legacy mass above. The legacy meshes span z = 5..35
+# mm in their own frame; visual_offset_z_m re-centres them on the box.
+gazebo_model:
+  collision_box_m: {x: 0.10, y: 0.10, z: 0.03}
+  visual_offset_z_m: -0.02
+  spawn_height_m: 0.02
+
+# Flight controller flying the vehicle. The legacy kwad.cpp cascade uses the
+# controller/pilot/state_error sections above and ignores RC input.
+flight_controller:
+  type: legacy

@@ -1,0 +1,38 @@
+# ros_gz_bridge configuration for the balloon arena (in addition to
+# bridge.yaml): the vehicle camera and the arena's score/time/event topics.
+
+- ros_topic_name: "/pluto/camera/image_raw"
+  gz_topic_name: "/pluto/camera/image_raw"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/pluto/camera/camera_info"
+  gz_topic_name: "/pluto/camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/arena/score"
+  gz_topic_name: "/arena/score"
+  ros_type_name: "std_msgs/msg/Int32"
+  gz_type_name: "gz.msgs.Int32"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/arena/time_remaining"
+  gz_topic_name: "/arena/time_remaining"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "gz.msgs.Double"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/arena/events"
+  gz_topic_name: "/arena/events"
+  ros_type_name: "std_msgs/msg/String"
+  gz_type_name: "gz.msgs.StringMsg"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/arena/result"
+  gz_topic_name: "/arena/result"
+  ros_type_name: "std_msgs/msg/String"
+  gz_type_name: "gz.msgs.StringMsg"
+  direction: GZ_TO_ROS

@@ -1,0 +1,13 @@
+# Heading scan at a fixed hover point: WaypointController with headings.
+# yaw_deg is relative to the take-off heading, counter-clockwise positive,
+# unwrapped (360 = one full turn left) - a camera pan of the field.
+waypoints_enu_m:
+  - [0.0, 0.0, 1.0,    0.0]   # climb, keep heading
+  - [0.0, 0.0, 1.0,   90.0]   # quarter turn left
+  - [0.0, 0.0, 1.0,  180.0]
+  - [0.0, 0.0, 1.0,  360.0]   # continue to a full turn
+  - [0.0, 0.0, 1.0,  270.0]   # reverse a quarter
+  - [0.0, 0.0, 1.0,  -90.0]   # sweep back right past the start
+  - [0.0, 0.0, 1.0,    0.0]
+hold_time_s: 3.0
+max_yaw_rate_deg_s: 45.0

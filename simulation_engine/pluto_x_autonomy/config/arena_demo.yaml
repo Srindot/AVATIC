@@ -1,0 +1,17 @@
+# DEMO ONLY - shows the popping/scoring mechanism. It flies straight to the
+# KNOWN positions of two balloons in pluto_x_gazebo config/arena_default.yaml
+# using simulator ground truth: exactly what participants cannot do. Their
+# controller has to find the balloons with the camera.
+#
+# Waypoints are relative to the take-off point (= the world origin here).
+# The balloon centres are the targets: the drone pops each balloon on first
+# contact, before reaching the centre.
+waypoints_enu_m:
+  - [1.5,  0.5, 1.0]    # yellow, 25 points
+  - [2.2, -1.2, 1.3]    # blue, 50 points
+  - [2.2, -1.2, 1.3]
+acceptance_radius_m: 0.15
+acceptance_speed_m_s: 0.5
+hold_time_s: 0.2
+max_speed_m_s: 1.2
+max_tilt_deg: 20.0

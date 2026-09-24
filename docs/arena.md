@@ -1,0 +1,155 @@
+# Balloon arena: balloons, popping, score, time limit, camera
+
+Status 2026-09-24. Launch: `ros2 launch pluto_x_bringup arena.launch.py`.
+
+## What it is
+
+| Piece | Where |
+|---|---|
+| Balloon mesh: the repository's `balloon.stl`, normalised to unit diameter with the origin at its centre; surface profile extracted for touch detection | `pluto_x_gazebo/tools/prepare_balloon_mesh.py` → `models/balloon/{meshes/balloon_unit.stl, profile.yaml}` |
+| Arena definition: balloons (colour, position), points per colour, time limit, vehicle contact radius | `pluto_x_gazebo/config/arena_default.yaml` |
+| Arena world: field with a 10 m × 10 m boundary, take-off pad, lighting, rendering (Sensors system) | `pluto_x_gazebo/worlds/balloon_arena.sdf.xacro` |
+| Arena logic (Gazebo-free, unit-tested): balloon surface geometry, pop rule, score, run clock | `pluto_x_core/arena/{balloon_shape,arena_scoring}` |
+| Gazebo world plugin: spawns coloured balloons, pops them (removes the model), publishes score/time/events, pauses the world at the limit | `pluto_x_gazebo/src/arena_system.cpp` (`ArenaSystem`) |
+| Forward camera on the Pluto X | vehicle YAML `camera:` section → model xacro |
+| RViz: camera image + ground-truth odometry | `pluto_x_bringup/rviz/arena.rviz` |
+
+Points: **green 100, blue 50, yellow 25, and red −75 (a penalty)**. Red
+balloons are obstacles: popping one subtracts 75 points. The default
+layout has two of each colour; the best achievable score is **350**
+(everything except red). The balloons are  at 1.2–4.3 m from the take-off point and
+0.9–1.9 m high. Higher-value balloons are farther away and higher, and
+several are behind the start heading, so the drone has to scan with yaw.
+Edit `balloons:` in the arena YAML to change the layout, or pass your own
+file with `arena_config:=`.
+
+## Rules as implemented
+
+* **Pop**: a balloon pops the first time the vehicle touches its surface.
+  The vehicle's outline is six spheres in its body frame (they move and
+  rotate with it), fitted to the model's measured envelope of 153 × 153 ×
+  47 mm (published: 16 × 16 × 4 cm). There is one r = 30 mm sphere per
+  propeller guard at (±47.5, ±47.5) mm, reaching the 77 mm half-width, one
+  r = 30 mm sphere on the body, and one r = 15 mm sphere on the camera
+  module. The spheres are thicker than the guards (±30 mm against
+  ±12 mm). The balloon surface is the actual mesh profile, as a surface of
+  revolution, scaled to `balloon.diameter_m`. The popped balloon's model is
+  removed and its colour's points are added, once.
+* Balloons are **visual-only** (no collision): the vehicle is not deflected
+  by a balloon; on first contact the balloon pops, as a real one would.
+* **Time limit**: `time_limit_s` = 15 s of simulation time.
+  `clock_start: sim_start` (the default, as requested) counts from
+  simulation time 0, so the firmware's ~4 s start-up and the take-off count
+  against the limit and about 11 s of flight remain.
+  `clock_start: armed` starts the clock when the flight controller first
+  reports ARMED.
+* **End of run**: at the limit, scoring stops. Contacts at or after the
+  limit never score, however quickly the simulator stops. The result is
+  published, optionally written to `result_file`, and the world is paused
+  (`pause_on_time_limit`). Measured: paused at 15.001 s (the next 1 ms
+  physics step).
+
+## Topics
+
+| Topic (ROS) | Type | |
+|---|---|---|
+| `/pluto/camera/image_raw` | sensor_msgs/Image | 1280×720 rgb8, 18 Hz |
+| `/pluto/camera/camera_info` | sensor_msgs/CameraInfo | |
+| `/arena/score` | std_msgs/Int32 | total points (10 Hz and on change) |
+| `/arena/time_remaining` | std_msgs/Float64 | seconds of run time left |
+| `/arena/events` | std_msgs/String | `t=6.910 s: POP yellow +25 (...) - total 25`, start, `TIME UP` |
+| `/arena/result` | std_msgs/String | final YAML: score, max, per-balloon popped |
+
+Balloon positions are not published; finding them is the task. In the
+simulator, `/sim/pluto/odometry` still gives ground truth for development.
+
+## Camera
+
+A Gazebo camera sensor on the vehicle (vehicle YAML `camera:`), modelling
+the Pluto WiFi Camera Module. From the supplier listing: 720p stream
+(1280×720) at about 18 FPS live over Wi-Fi, 8 g (added to the vehicle mass:
+68 g in flight). Estimated, because the listing does not give them: 80°
+horizontal field of view, mounted forward and facing ahead (3 cm ahead of
+and 1.5 cm above the centre of mass, no tilt), and the pixel noise. With
+the camera fitted, the real drone routes control and telemetry through the
+camera's Wi-Fi. The simulator does not model that link's latency, the H.264
+compression, motion blur, rolling shutter, or the module's 3.4 V brown-out. Rendering works headless
+(`--headless-rendering`, set by `headless:=true`).
+
+## Checks
+
+`simulation_engine/scripts/check_arena.sh` runs the arena headless with a **demo** mission
+(`pluto_x_autonomy/config/arena_demo.yaml`: straight to two known balloons,
+using ground truth, which participants cannot do). It checks the time limit,
+the score arithmetic, the pop events, the camera size and rate, and that
+balloon colours are visible in the camera images. Result on 2026-09-24:
+
+| t (sim) | event | total |
+|---|---|---|
+| 0.001 s | run clock started | 0 |
+| 6.91 s | POP yellow +25 | 25 |
+| 9.67 s | POP blue +50 | 75 |
+| 15.001 s | TIME UP, world paused | 75 (of 500 at the time; the best score is now 350, with red a −75 penalty) |
+
+The popped balloons' models were gone from the world afterwards. The
+camera ran at 18.0 Hz (1280×720). Arena logic unit tests: `pluto_x_core` `test_arena.cpp`.
+
+## Workshop demo (`balloon_demo.launch.py`)
+
+```bash
+ros2 launch pluto_x_demo balloon_demo.launch.py
+```
+
+This opens Gazebo (the whole field) and RViz (the drone's camera, the live
+score and time left above the field, and the flight path). The demo
+controller (`demo/pluto_x_demo/balloon_demo.py`) flies a
+hand-planned route through **known** balloon positions using ground truth:
+
+1. it takes off vertically to 0.5 m with level sticks. Commanding tilt or
+   yaw on the ground only presses the drone into the ground: the
+   firmware's attitude loop saturates and it never lifts off;
+2. for each balloon, it turns on the spot to face it, then flies into it
+   keeping the nose on the bearing, and moves on once contact is certain.
+
+When the time is up, the world pauses and the scoreboard prints the result
+table in the terminal and shows the final score in RViz. **It is not a
+solution to the challenge:** teams must find the balloons with the camera.
+
+The demo runs for **35 s** (`time_limit_s`; the arena config's competition
+limit stays 15 s). It visits the six non-red balloons
+(`demo/config/balloon_demo.yaml`) in the shortest order, 17.5 m in total, and
+every leg passes at least 1.08 m from both red balloons. Measured in
+Gazebo on 2026-09-24:
+
+| # | balloon | popped at (sim) | total |
+|---|---|---|---|
+| 1 | yellow 0 | 6.80 s | 25 |
+| 2 | green 6 | 9.13 s | 125 |
+| 3 | blue 2 | 15.00 s | 175 |
+| 4 | blue 3 | 17.78 s | 225 |
+| 5 | green 7 | 20.04 s | 325 |
+| 6 | yellow 1 | 26.36 s | **350 / 350** |
+
+No red balloon was popped. The closest approaches were 2.47 m (red 4) and
+1.05 m (red 5); popping needs about 0.23 m. `simulation_engine/scripts/check_arena.sh` with
+`FORBID=red` fails the run if a red balloon pops.
+
+Competition-length variant (15 s; route blue 3 → green 7, at least 2.2 m
+from red):
+
+```bash
+ros2 launch pluto_x_demo balloon_demo.launch.py time_limit_s:=15 route_file:=$(ros2 pkg prefix pluto_x_demo)/share/pluto_x_demo/config/balloon_demo_15s.yaml
+```
+
+Result: 150 points (8.30 and 10.51 s), no red popped.
+
+To plan another route, change `route:` (balloon indices are listed in the
+file) and pass the file with `route_file:=`.
+
+## Limitations
+
+* The vehicle's contact shape is a sphere, not the real frame, propeller
+  and guard geometry.
+* Balloons are fixed in place: no drift, bobbing, strings or popping
+  debris.
+* One vehicle per arena.
