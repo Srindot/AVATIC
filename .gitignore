@@ -2,6 +2,10 @@
 build/
 install/
 log/
+# dev container builds (used when build/ came from outside the container)
+build_container/
+install_container/
+log_container/
 
 # recorded simulation runs and evaluation sessions (large, per user)
 analysis/runs/*

@@ -48,6 +48,7 @@ met.
 |---|---|
 | `avatic_drone needs the simulator environment` | Run the two `source` lines in this terminal ([page 1](1_getting_started.md#every-new-terminal)). |
 | `ros2: command not found` | Same: run `source /opt/ros/humble/setup.bash`. |
+| `Package 'pluto_x_...' not found` | Run `source install/setup.bash` again (or open a new terminal). A terminal only knows the packages that existed when it was sourced, so this happens after a new build. |
 | `can't open file ... my_controller.py` | Run commands from the repository folder (`cd` into it). |
 | `controller file not found: ...` | Give the path from the repository folder: `controller:=outerloop_controller/my_controller.py`. |
 | `ModuleNotFoundError: No module named 'avatic_drone'` | Keep your controller files inside `outerloop_controller/`. |

@@ -2,7 +2,7 @@
 #
 # PROVENANCE
 #   Every numeric value below is copied from the #defines and globals in
-#   resources/PlutoX-ROS-Joystick-Control/src/kwad.cpp (legacy name given in
+#   src/kwad.cpp of https://github.com/NishanthARao/PlutoX-ROS-Joystick-Control (legacy name given in
 #   brackets). They describe the vehicle kwad.cpp simulated: 1.4 kg with a
 #   0.56 m arm, i.e. a much larger quadrotor than the Pluto X.
 #

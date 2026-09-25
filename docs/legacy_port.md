@@ -94,8 +94,11 @@ simulation_engine/scripts/dev.sh                           run any command in th
 simulation_engine/scripts/validate_legacy_sim.sh           full end-to-end validation
 ```
 
-`resources/COLCON_IGNORE` keeps the reference repositories (ROS 1, firmware)
-out of the colcon workspace.
+`resources/COLCON_IGNORE` keeps the reference material (the Pluto Python
+tutorials) out of the colcon workspace. The reference repositories that used
+to be there are on GitHub: MagisV2 (DronaAviation/MagisV2, vendored in
+`firmware/magisv2`) and the legacy simulator
+(NishanthARao/PlutoX-ROS-Joystick-Control).
 
 ## 3. Data flow and timing
 

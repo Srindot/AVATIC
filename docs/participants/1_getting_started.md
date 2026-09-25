@@ -2,48 +2,30 @@
 
 About 15 minutes. At the end you will have flown the drone in the simulator.
 
-## What you need
+## Install
 
-- **Ubuntu 22.04** with **ROS 2 Humble** and **Gazebo Harmonic**. On a lab
-  machine these are usually installed already. If not:
+Follow **[Setup and installation](../../README.md#setup-and-installation)**
+in the main README. There are two ways:
 
-  ```bash
-  sudo apt install ros-humble-desktop ros-humble-ros-gzharmonic ros-humble-xacro
-  ```
-
-- **Python tools** for your controller and for looking at your flights:
-
-  ```bash
-  sudo apt install ffmpeg python3-numpy python3-yaml python3-matplotlib
-  pip install notebook opencv-python
-  ```
-
-  (OpenCV is optional. NumPy is enough to start.)
-
-## Build (once)
-
-Open a terminal **in the repository folder** (the folder with this
-`README.md`, `outerloop_controller/`, `simulation_engine/` ...) and run:
-
-```bash
-source /opt/ros/humble/setup.bash && colcon build
-```
-
-It takes a few minutes the first time. You only need to build again if the
-organisers update the simulator. **Your own Python code never needs a
-build.**
+- **Option 1, local:** Ubuntu 22.04 (native, or WSL2 on Windows). You
+  install ROS 2 Humble and Gazebo Harmonic yourself. This is the harder way.
+- **Option 2, Docker dev container (recommended):** works on Linux,
+  Windows and macOS. VS Code opens the repository in a ready-made
+  environment.
 
 ## Every new terminal
 
-Each new terminal needs these two lines once (they tell the terminal where
-ROS and the simulator are). Run every command from the repository folder:
+In a local setup, each new terminal needs these two lines once (they tell
+the terminal where ROS and the simulator are). Run every command from the
+repository folder:
 
 ```bash
 source /opt/ros/humble/setup.bash && source install/setup.bash
 ```
 
 Tip: add them to the end of your `~/.bashrc` (with `cd` to the repository
-first) so you never forget.
+first) so you never forget. **In the dev container this is already done
+for you.**
 
 ## Your first flight
 

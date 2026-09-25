@@ -17,5 +17,7 @@ updated by re-running the import with a newer commit.
 To verify the import is unmodified:
 
 ```bash
-git -C resources/MagisV2 archive 5982032ca1496779fed16fad537efe0bb7ebfd8d LICENSE README.md Makefile PlutoPilot.cpp PlutoPilot.h src lib support | tar -t | wc -l
+tmp=$(mktemp -d) && git clone -q https://github.com/DronaAviation/MagisV2.git "$tmp/src" && \
+git -C "$tmp/src" archive 5982032ca1496779fed16fad537efe0bb7ebfd8d LICENSE README.md Makefile PlutoPilot.cpp PlutoPilot.h src lib support | tar -x -C "$tmp" --exclude=.DS_Store && \
+rm -rf "$tmp/src" && diff -r --exclude=PROVENANCE.md --exclude=COLCON_IGNORE --exclude=.DS_Store "$tmp" firmware/magisv2 && echo unmodified
 ```

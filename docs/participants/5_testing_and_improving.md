@@ -90,4 +90,25 @@ it shows every run, and maps of your best and worst flights.
 - Close other simulations first: they slow the computer down and can
   change your results.
 
+## Save the notebooks for your submission
+
+Your submission needs both notebooks **executed**, with all their outputs
+visible:
+
+1. **Analysis:** set `RUN` in the first cell to your **best** run, then
+   *Kernel → Restart & Run All*, then *File → Save*.
+2. **Evaluation:** evaluate your **final** controller (at least 10 runs),
+   open `evaluation/evaluation.ipynb`, *Kernel → Restart & Run All*, then
+   *File → Save*.
+
+Or from a terminal, in the repository folder:
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace analysis/analysis.ipynb
+```
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace evaluation/evaluation.ipynb
+```
+
 **Next:** [6. Tips and troubleshooting](6_tips_and_troubleshooting.md)

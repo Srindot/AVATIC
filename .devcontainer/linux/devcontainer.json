@@ -1,0 +1,39 @@
+{
+    "name": "Linux | AVATIC",
+    "privileged": true,
+    "remoteUser": "rosusr",
+    "image": "ghcr.io/srindot/avatic:latest",
+    "workspaceFolder": "/home/rosusr/workspace",
+    "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/home/rosusr/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter",
+                "ms-iot.vscode-ros",
+                "eamodio.gitlens",
+                "mechatroner.rainbow-csv",
+                "ms-azuretools.vscode-docker",
+                "twxs.cmake",
+                "ms-vscode.cmake-tools",
+                "redhat.vscode-yaml",
+                "smilerobotics.urdf"
+            ]
+        }
+    },
+    "containerEnv": {
+        "DISPLAY": ":0",
+        "QT_QPA_PLATFORM": "xcb"
+    },
+    "runArgs": [
+        "--privileged",   // also gives the container the host's GPU (/dev/dri) for Mesa
+        "-e", "DISPLAY=${localEnv:DISPLAY}",
+        "-e", "QT_QPA_PLATFORM=xcb",
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix"
+    ],
+    "initializeCommand": "xhost +local:docker",
+    "postCreateCommand": "bash .devcontainer/post_create.sh",
+    "features": {}
+}

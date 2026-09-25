@@ -68,13 +68,23 @@ are. (The analysis notebook shows them afterwards, for you to learn from.)
 
 ## What you submit
 
-`outerloop_controller/my_controller.py`, plus any Python files you add next
-to it in `outerloop_controller/`. Do not change anything in
-`simulation_engine/`, `outerloop_controller/avatic_drone/` or `hitl/`: the
-judges use their own copies.
+All of these are **required**:
 
-> **Organisers:** add the submission format, deadline, number of judging
-> layouts, how scores are combined, and whether the final round is flown on
-> the real drone.
+1. **Your code:** `outerloop_controller/my_controller.py`, plus any Python
+   files you add next to it in `outerloop_controller/`. Do not change
+   anything in `simulation_engine/`, `outerloop_controller/avatic_drone/`
+   or `hitl/`: the judges use their own copies.
+2. **The analysis notebook of your best run** (`analysis/analysis.ipynb`),
+   executed and saved with all outputs visible.
+3. **The evaluation notebook** (`evaluation/evaluation.ipynb`), executed on
+   an evaluation of your final controller (at least 10 runs).
+4. **A video:** a screen recording of your best simulation run, showing
+   the Gazebo window from arming to the final score.
+5. **A report** explaining your outer-loop idea: how you find the balloons
+   in the image, how you choose which one to go for, how you fly to it and
+   avoid the red ones, and what you tried that did not work.
+
+How to run and save the notebooks: [page 5](5_testing_and_improving.md).
+The submission format and deadline will be announced by the organisers.
 
 **Next:** [3. Writing your controller](3_writing_your_controller.md)

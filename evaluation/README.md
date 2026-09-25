@@ -1,72 +1,80 @@
-# Evaluation: how good is your controller on layouts it has never seen?
+# Evaluation: test on many new layouts
 
-(Participant guide: [5. Testing and improving](../docs/participants/5_testing_and_improving.md).)
+A controller can work well on the one layout you practise on and still
+fail on others. **Judging uses layouts nobody has seen**, like the hidden
+test cases of a programming contest. The evaluation checks your controller
+the same way before you submit it.
 
-The analysis tools (`analysis/`) replay one layout again and again, which is
-right for tuning. Judging uses layouts your controller has never seen,
-so before submitting, test it the same way:
+## Run an evaluation
+
+From the repository folder (environment loaded):
 
 ```bash
-source install/setup.bash && python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
+python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
 ```
+
+- It flies **10 runs on 10 random layouts**, one after another, without
+  windows. Each run takes about 25 s, so 10 runs take about 5 minutes.
+- It never uses your practice layout (seed 42).
+- It prints each run's score and, at the end, your **average score**.
+- **Ctrl-C** stops early. The runs already done are kept.
+
+Then open the report:
 
 ```bash
 jupyter notebook evaluation/evaluation.ipynb
 ```
 
-Each run is a normal competition run (headless, 15 s from arming) on a new
-random layout (never the development seed in `analysis/seed.yaml`). The
-runs are one after the other, about 25 s each, so 10 runs take about
-5 minutes. Ctrl-C stops early and keeps the runs done so far
-(`summary.csv` and `session.yaml` are rewritten after every run).
+Choose ***Kernel → Restart & Run All***. It shows the **latest**
+evaluation. For an older one, set `SESSION = '<folder name>'` in the first
+cell.
 
-The notebook shows the latest session (set `SESSION` for an older one):
+## What the report shows
 
-- **the headline first:** mean score out of 350, min / median / max, the
-  mean with never-armed runs as 0, red balloons hit, simulator failures,
-  controller errors, and how many balloons of each colour were popped over
-  all the runs;
-- the score of every run and the distribution;
-- balloons per colour and the time to the first pop;
-- a table of every run;
-- the best and the worst run on a map, and the camera in the worst run.
+| Section | What you learn |
+|---|---|
+| **Headline** | your **average score out of 350**, the lowest, middle and highest scores, red balloons hit, failed runs |
+| **Score per run** | one bar per layout, and how the scores are spread |
+| **Balloons per colour** | how often you popped each colour, over all runs |
+| **Time to the first pop** | how fast your controller finds a balloon |
+| **Every run** | a table with all the numbers |
+| **Best and worst run** | a map of each, and what the camera saw in the worst one |
 
-Any single run can be looked at with all the analysis plots:
-`run = evallog.load_run(session, 3)`, then `runlog.plot_overview(run)`.
+**A run where your controller never armed counts as 0 points**, as in
+judging.
 
 ## Options
 
-| | |
+| Option | What it does |
 |---|---|
-| `--runs N` | number of random layouts (default 10) |
-| `--seeds 5,17,301` | these layouts instead (e.g. to rerun a bad one) |
-| `--timeout S` | wall-clock limit per run (default 120 s) |
+| `--runs 20` | the number of random layouts (default 10) |
+| `--seeds 5,17,301` | these layouts instead, for example to repeat your worst one |
+| `--timeout 120` | the longest a single run may take, in seconds |
+
+Close other simulations first: they slow the computer down and can change
+your results.
+
+## For your submission
+
+Run an evaluation of your **final** controller (at least 10 runs), run the
+notebook, save it with all outputs visible (*File → Save*), and include it
+in your submission. From a terminal:
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace evaluation/evaluation.ipynb
+```
 
 ## What is saved
 
-`evaluation/sessions/<date-time>/` (not in git):
+Each evaluation is saved in `evaluation/sessions/<date>_<time>/`:
 
-| | |
+| File | Content |
 |---|---|
-| `session.yaml` | controller path and SHA-256, seeds, times, mean score (and incl. never-armed as 0), min and best run score, best possible per run, red hits, simulator failures |
-| `summary.csv` | one row per run: status, score, balloons popped and available per colour, red hits, time to the first pop, distance, tilt, controller error and SHA-256 at that run |
-| `run_XX_seed_N/` | the full recording of each run, the same files as `analysis/runs/<run>/` |
+| `session.yaml` | your controller file, the layouts, the average score |
+| `summary.csv` | one line per run: score, balloons per colour, red hits, status |
+| `run_XX_seed_N/` | the full recording of each run (same files as in `analysis/runs/`) |
 | `logs/run_XX.log` | the simulator and controller output of each run (look here if a run failed) |
 
-Run status:
-
-| | |
-|---|---|
-| `complete` | the run ended normally; its score counts |
-| `never_armed` | your controller never armed the drone: **0 points** (included in "mean incl. never-armed runs as 0", as in judging) |
-| `crashed` / `timeout` | the simulator stopped before the result, or took longer than `--timeout` with the drone armed: a simulator failure, left out of the means (look at `logs/`) |
-
-A run where your `step()` raised an error still counts: the failsafe takes
-over and the run ends normally, with `controller_error = 1` (detected from
-the template's message; a controller not built on the template is not
-detected).
-
-Each run uses its own Gazebo partition and ROS domain (localhost only), so
-it does not interfere with a simulator you have open or other laptops on
-the network, but it does share the CPU with it: close other simulations
-for results representative of judging.
+A run's status is `complete` (it counts), `never_armed` (your controller
+never armed the drone: 0 points), or `crashed` / `timeout` (the simulator
+failed: the run is left out, see its log).

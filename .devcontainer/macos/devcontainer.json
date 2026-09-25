@@ -1,0 +1,38 @@
+{
+    "name": "MacOS | AVATIC",
+    "privileged": true,
+    "remoteUser": "rosusr",
+    "image": "ghcr.io/srindot/avatic:latest",
+    "workspaceFolder": "/home/rosusr/workspace",
+    "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/home/rosusr/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter",
+                "ms-iot.vscode-ros",
+                "eamodio.gitlens",
+                "mechatroner.rainbow-csv",
+                "ms-azuretools.vscode-docker",
+                "twxs.cmake",
+                "ms-vscode.cmake-tools",
+                "redhat.vscode-yaml",
+                "smilerobotics.urdf"
+            ]
+        }
+    },
+    "containerEnv": {
+        "DISPLAY": "host.docker.internal:0",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "QT_X11_NO_MITSHM": "1"
+    },
+    "runArgs": [
+        "--privileged",
+        "--net=host",
+        "-e", "DISPLAY=host.docker.internal:0"
+    ],
+    "postCreateCommand": "bash .devcontainer/post_create.sh",
+    "features": {}
+}
