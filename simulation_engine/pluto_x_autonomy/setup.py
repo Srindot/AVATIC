@@ -17,7 +17,7 @@ setup(
     zip_safe=True,
     maintainer='srindot',
     maintainer_email='srinath.bhamidipati@research.iiit.ac.in',
-    description='Outer-loop controller interface and host for the Pluto X.',
+    description='Developer outer-loop interface and host for Pluto X simulator validation.',
     license='TBD',
     tests_require=['pytest'],
     entry_points={

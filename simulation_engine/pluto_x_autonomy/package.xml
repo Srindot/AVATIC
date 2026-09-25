@@ -4,9 +4,10 @@
   <name>pluto_x_autonomy</name>
   <version>0.1.0</version>
   <description>
-    Outer-loop (autonomy) layer of the Pluto X simulation: the
-    OuterLoopController interface that participants implement, the
-    outer_loop_host node that loads a controller by import path and flies it
+    Developer outer-loop layer of the Pluto X simulation (simulator
+    validation; participants use outerloop_controller/avatic_drone, which
+    imports StickCommand and the RC mapping from here): the
+    OuterLoopController interface, the outer_loop_host node that loads a controller by import path and flies it
     through the flight controller's RC interface (arming, landing and
     failsafe supervision included), and example controllers.
   </description>

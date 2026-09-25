@@ -15,6 +15,10 @@
 # instead (see simulation_engine/scripts/check_mission.sh).
 set -euo pipefail
 
+# on any exit (error, Ctrl-C) never leave a simulation running
+SIM_PGID=""
+trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
+
 readonly SHUTDOWN_GRACE_S=10
 readonly SHARE="$(ros2 pkg prefix pluto_x_autonomy)/share/pluto_x_autonomy"
 modes=("${@:-open_loop closed_loop}")
@@ -51,6 +55,7 @@ run_mode() {  # <mode>
     controller:="${controller}" ${params:+controller_params_file:="${params}"} \
     config_file:="${config}" > "${out}/sim.log" 2>&1 &
   local sim_pid=$! status=0
+  SIM_PGID="${sim_pid}"
   ros2 run pluto_x_bringup yaw_check.py "${mode}" --out "${out}" 2>&1 \
     | tee "${out}/check.log" || status=$?
   kill -INT -- "-${sim_pid}" 2>/dev/null || true

@@ -128,7 +128,8 @@ class StickCommand:
 
 
 class OuterLoopController(abc.ABC):
-    """Base class of participant outer-loop controllers."""
+    """Base class of developer outer-loop controllers (simulator checks;
+    participants use avatic_drone instead)."""
 
     def __init__(self, params: Mapping[str, Any]):
         self.params = dict(params)

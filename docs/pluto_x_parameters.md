@@ -1,7 +1,8 @@
 # Pluto X vehicle parameters — sources, estimates, and what to measure
 
-File: `simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml` (default config of
-`legacy_sim.launch.py` since 2026-09-24).
+File: `simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml` (the default
+vehicle config of every launch; it selects `flight_controller: magisv2`, the
+production firmware in the loop; `legacy_sim.launch.py` forces the legacy stack).
 
 **Status: estimated, not measured.** No official datasheet publishes mass
 properties, geometry or thrust. A web search (2026-09-24) found the published
@@ -78,13 +79,13 @@ camera module, 68 g in total):
 | Frame | 12 g [SRC] | two 130 mm rods on the diagonals (10 × 10 cm frame) | 8.5e-6 | 8.5e-6 | 1.69e-5 |
 | Battery | 16 g | 37 × 24 × 8 mm box [SRC size], 10 mm below the CoM | 2.5e-6 | 3.5e-6 | 2.6e-6 |
 | Board + electronics | 12 g | 40 × 40 mm plate, 10 mm above the CoM | 2.8e-6 | 2.8e-6 | 3.2e-6 |
-| Camera module | 8 g [SRC] | 20 mm forward, 15 mm above the CoM [EST], plus its own box | 2.2e-6 | 5.6e-6 | 3.9e-6 |
+| Camera module | 8 g [SRC] | about 20–35 mm forward, 15–18 mm below the CoM [EST] (hangs under the body), plus its own box | 2.2e-6 | 5.6e-6 | 3.9e-6 |
 | **Sum** | 68 g | | **5.83e-5** | **6.27e-5** | **1.11e-4** |
 
 Used: Ixx = 5.8e-5, Iyy = 6.3e-5, Izz = 1.11e-4 kg m² (triangle
 inequality: 1.21e-4 ≥ 1.11e-4). Before the geometry correction (§2) it was
-3.2e-5 / 3.6e-5 / 6.0e-5. ASSUMPTION: the camera's ~2.4 mm forward and
-~1.8 mm upward shift of the centre of mass is neglected; the wrench is
+3.2e-5 / 3.6e-5 / 6.0e-5. ASSUMPTION: the camera's ~4.1 mm forward
+(8/68 × 35 mm, mount at x = 0.035 m) and ~2.1 mm downward shift of the centre of mass is neglected; the wrench is
 applied at the link origin. Uncertainty: about ±40 %, because the
 component masses (other than the frame, camera and total) are guesses.
 
@@ -140,9 +141,11 @@ Measured in Gazebo after the change, a motors-off fall from 5 m matches the
 analytic solution with body drag to 4.7 mm over the 4.7 m drop
 (`simulation_engine/scripts/check_dynamics.sh`).
 
-## 6. Controller values [CTRL]
+## 6. Legacy controller values [CTRL] (`flight_controller: legacy` only)
 
-The controller is still the legacy `kwad.cpp` cascade. Its gains were
+These apply only to the legacy `kwad.cpp` cascade (`legacy_sim.launch.py`);
+the default configuration flies the MagisV2 firmware, whose gains are its
+own (firmware defaults). The legacy gains were
 **rescaled, not tuned**, so that each loop's closed-loop behaviour is
 unchanged:
 
@@ -159,8 +162,7 @@ Torque and thrust limits come from the rotor model (§4), not from the
 legacy numbers. The legacy "arm length applied twice" quirk is off
 (`legacy_double_arm_torque: false`), and the mixer uses MagisV2's X layout.
 
-This is **not MagisV2**. The real Pluto X response (angle mode, 285 Hz loop,
-altitude hold) will differ until MagisV2 runs in the loop.
+The legacy stack is **not MagisV2**; use it only for comparison.
 
 ## 7. "Close enough" effects (added 2026-09-24)
 
@@ -174,8 +176,8 @@ there. All values are estimates.
 | Motor lag | first-order rotor speed, exact discretisation | τ = 30 ms | [EST] | `dynamics/rotor_actuator` |
 | Battery sag | V = V_oc(soc) − R·I; I = I_hover (T/T_hover)^1.5; thrust × (V/V_ref)² | 600 mAh [SRC], R = 0.08 Ω, I_hover = 3.2 A (80 % of 600 mAh in ~9 min [SRC]), V_ref = 3.7 V, typical LiPo curve | [EST] | `dynamics/battery_model`, `dynamics/propulsion_model` |
 | Command latency | pure delay on the pilot command, simulation time | 50 ms | [EST] | `common/delay_line` |
-| Sensor/estimator error | constant roll/pitch bias + white noise on attitude; constant bias + white noise on gyro | bias 1° (σ), noise 0.1°; gyro bias 0.05 °/s, noise 0.0018 rad/s (ICM-20948 0.015 °/s/√Hz [SRC] × 50 Hz [EST]) | [EST] | `sensors/state_error_model` |
-| Wind | mean + per-axis Gauss–Markov gust, acting through air-relative drag | mean 0, σ 0.3 m/s, τ 2 s | [EST] | `environment/wind_model` |
+| Sensor/estimator error (legacy stack only; MagisV2 gets noisy IMU/baro samples instead) | constant roll/pitch bias + white noise on attitude; constant bias + white noise on gyro | bias 1° (σ), noise 0.1°; gyro bias 0.05 °/s, noise 0.0018 rad/s (ICM-20948 0.015 °/s/√Hz [SRC] × 50 Hz [EST]) | [EST] | `sensors/state_error_model` |
+| Wind | mean + per-axis Gauss–Markov gust, acting through air-relative drag | mean 0, σ 0.15 m/s (0.3 until 2026-09-25), τ 2 s | [EST] | `environment/wind_model` |
 | Gyroscopic term | physical −ω × h (legacy form selectable) | J_rotor = 4e-8 kg m² | [EST] | `dynamics/legacy_dynamics` |
 | Rotor spin-up yaw torque | Σ s_i J_rotor dω_i/dt on the yaw axis (angular-momentum exchange; tested) | J_rotor = 4e-8 kg m²; requires motor lag > 0 (enforced by the loader) | [EST] | `dynamics/propulsion_model` |
 | Drag | rotor drag + quadratic body drag (§5) | see §5 | [EST] | `dynamics/aerodynamic_drag` |
@@ -221,11 +223,12 @@ battery therefore climbs slowly with it, and a depleted one sinks, as on
 real brushed quads.
 
 Still not modelled:
-* the camera and its latency (the delay model is ready);
+* the camera's latency (the camera itself is modelled: 1280 × 720, 18 Hz,
+  80°; the delay model is ready);
 * ground effect;
-* rotor drag and quadratic drag;
-* IMU samples feeding a real estimator. MagisV2 in the loop replaces the
-  sensor-error stand-in.
+* vibration in the IMU samples.
+(Rotor drag and quadratic body drag are modelled, §5; since MagisV2 runs in
+the loop, real IMU samples feed its own estimator.)
 
 ## 8. Measurement plan (replaces [EST] values)
 

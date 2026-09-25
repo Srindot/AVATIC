@@ -303,8 +303,8 @@ void ArenaSystem::PreUpdate(const gz::sim::UpdateInfo& info,
         balloon_entities_[e.index] = gz::sim::kNullEntity;
       }
       std::ostringstream text;
-      text << std::fixed << std::setprecision(2) << "POP " << b.color << " +"
-           << e.points << " (" << b.name << ", run time " << e.run_time_s
+      text << std::fixed << std::setprecision(2) << "POP " << b.color << " "
+           << std::showpos << e.points << std::noshowpos << " (" << b.name << ", run time " << e.run_time_s
            << " s) - total " << e.total_points;
       Event(now_s, text.str());
     }

@@ -139,11 +139,11 @@ wind:
   enabled: true
   seed: 2
   mean_enu_m_s: {x: 0.0, y: 0.0, z: 0.0}
-  gust_std_m_s: 0.3                # [EST] light outdoor gusts
+  gust_std_m_s: 0.15               # [EST] light gusts (reduced from 0.3 on 2026-09-25 to ease controller development)
   gust_time_constant_s: 2.0        # [EST]
 
 # Flight controller flying the vehicle.
-#   magisv2: the production MagisV2 firmware (third_party/magisv2) on the
+#   magisv2: the production MagisV2 firmware (firmware/magisv2) on the
 #            simulated sensors below, commanded by RC frames on /pluto/rc.
 #   legacy:  the kwad.cpp cascade (controller/pilot/state_error sections);
 #            ignores RC. Used by the legacy validation scripts.
@@ -186,11 +186,14 @@ camera:
   height_px: 720                     # [SRC]
   horizontal_fov_deg: 80.0           # [EST] not in the spec; measure
   rate_hz: 18.0                      # [SRC] ~18 FPS over Wi-Fi
-  clip_near_m: 0.03
+  clip_near_m: 0.005                 # the lens is ~5 mm above the ground on the pad
   clip_far_m: 30.0
   noise_std: 0.007                   # [EST] pixel noise, fraction of full scale
   # mount in the body FLU frame: forward of the CoM, tilt + = pitched DOWN
-  position_flu_m: {x: 0.030, y: 0.0, z: 0.015}   # [EST] front of the UniBus module
+  position_flu_m: {x: 0.035, y: 0.0, z: -0.018}  # [EST] under the front of the body (Pluto X
+                                     #   camera module hangs below the drone); above
+                                     #   the collision-box bottom (-0.0225) so the lens
+                                     #   stays above ground on the pad
   tilt_down_deg: 0.0                 # [EST]
 
 # Visuals: the legacy meshes (motors and guards at +-46 mm, as the physics),

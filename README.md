@@ -1,71 +1,83 @@
-# Autonomous Vision-Based Aerial Target Interception Challenge (AVATIC)
+# AVATIC: Autonomous Vision-Based Aerial Target Interception Challenge
 
-Simulation platform for the INFINIUM '26 Pluto X competition: pop the right
-balloons with a camera-guided Pluto X within 15 s.
+INFINIUM '26. Write a Python program that flies a **Pluto X** drone using
+its **camera** and pops the right balloons in **15 seconds**.
 
-The simulated Pluto X is flown by its **production MagisV2 firmware**
-(compiled unmodified for the PC) on Gazebo physics, with a forward camera.
-Teams write the **outer-loop controller** in plain Python: camera and
-telemetry in, stick commands out, the same interface as the real drone.
+| Balloon | green | blue | yellow | red |
+|---|---|---|---|---|
+| Points | +100 | +50 | +25 | **−75: avoid** |
+
+You develop in a simulator that runs the drone's **real flight-controller
+software**, and the same program then flies the real drone.
+
+## Participants: start here
+
+**Read the [participant guide](docs/participants/README.md).** It explains
+everything from installing to your first balloon.
+
+The short version, from this folder:
+
+```bash
+source /opt/ros/humble/setup.bash && colcon build          # once
+source install/setup.bash                                  # in every new terminal
+ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controller/my_controller.py
+```
+
+Your code goes in [`outerloop_controller/my_controller.py`](outerloop_controller/my_controller.py).
+Look at your flights with `analysis/analysis.ipynb`, and test on new layouts
+with `python3 evaluation/evaluate.py --runs 10`.
+
+## What is in this repository
 
 ```text
-outerloop_controller/   PARTICIPANTS: your controller + the Drone interface  -> outerloop_controller/README.md
-demo/                   workshop demo: planned-route balloon popping          -> demo/README.md
-simulation_engine/      the simulator (organisers only, do not edit)          -> simulation_engine/README.md
-third_party/magisv2     MagisV2 firmware, vendored unmodified (GPL-3.0-or-later)
-docs/                   architecture, parameters and sources, arena, legacy port
-resources/              reference repositories (not built)
+outerloop_controller/   YOUR code: my_controller.py, an example, the drone interface
+analysis/               every run is saved here; notebook to look at a run
+evaluation/             test your controller on many new layouts; report notebook
+docs/participants/      the participant guide
+hitl/                   the connection to the real drone (organisers)
+demo/                   workshop demo: a pre-planned route popping balloons
+simulation_engine/      the simulator (organisers only; do not edit)
+firmware/magisv2        the drone's real firmware, unmodified (GPL-3.0-or-later)
+docs/                   technical documentation (organisers)
+resources/, literature_survey/   reference material (not built)
 ```
 
-## Build
+## Organisers
 
-Native; needs ROS 2 Humble, `ros-humble-ros-gzharmonic` and
-`ros-humble-xacro`. Run from the repository root:
+Workshop demo (Gazebo + RViz camera view, result table at the end):
 
 ```bash
-source /opt/ros/humble/setup.bash && colcon build
+ros2 launch pluto_x_demo balloon_demo.launch.py
 ```
 
-## Run
-
-Workshop demo (Gazebo + RViz camera view, results table at the end):
+Checks:
 
 ```bash
-source install/setup.bash && ros2 launch pluto_x_demo balloon_demo.launch.py
-```
-
-A participant run: a random balloon layout that waits for your
-controller. Start the simulator:
-
-```bash
-source install/setup.bash && ros2 launch pluto_x_bringup competition.launch.py
-```
-
-and, in a second terminal:
-
-```bash
-source install/setup.bash && python3 outerloop_controller/my_controller.py
-```
-
-Without windows: add `headless:=true rviz:=false` to either launch.
-
-## Checks (organisers)
-
-```bash
-source install/setup.bash && colcon test && colcon test-result --all
+colcon test && colcon test-result --all
 ```
 
 ```bash
-source install/setup.bash && ./simulation_engine/scripts/check_arena.sh
+python3 -m pytest hitl/tests
 ```
 
-The other checks are in `simulation_engine/scripts/`: `check_mission.sh`,
-`check_yaw.sh`, `check_dynamics.sh` and `validate_legacy_sim.sh`.
+```bash
+./simulation_engine/scripts/check_arena.sh
+```
 
-## Documentation
+The other end-to-end checks are in `simulation_engine/scripts/`
+(`check_mission.sh`, `check_yaw.sh`, `check_dynamics.sh`,
+`validate_legacy_sim.sh`).
+
+Technical documentation:
 
 - [docs/architecture.md](docs/architecture.md): how it fits together, the
-  MagisV2 findings, verification
-- [docs/arena.md](docs/arena.md): balloons, scoring, camera, the demo
+  firmware findings (including the **open altitude-hold question**,
+  finding 7), verification
+- [docs/arena.md](docs/arena.md): balloons, scoring, arena rules, camera,
+  the demo
 - [docs/pluto_x_parameters.md](docs/pluto_x_parameters.md): vehicle
   parameters, sources and estimates
+- [hitl/README.md](hitl/README.md): the hardware backend, the MSP test
+  bridge, and the first-flight checklist
+- [simulation_engine/README.md](simulation_engine/README.md): the packages
+  and launch files

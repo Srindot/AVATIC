@@ -17,6 +17,9 @@
 
   <depend>pluto_x_core</depend>
   <depend>pluto_x_magisv2</depend>
+  <depend>yaml-cpp</depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
   <!-- Gazebo Harmonic (gz-sim8, gz-transport13, gz-msgs10, gz-plugin2,
        gz-common5) is provided by ros-humble-ros-gzharmonic in the dev image;
        no rosdep keys are declared for these system libraries. -->

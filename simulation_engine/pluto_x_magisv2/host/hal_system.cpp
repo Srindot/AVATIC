@@ -28,19 +28,27 @@ uint32_t micros(void) { return State().time_us; }
 
 uint32_t millis(void) { return State().time_us / 1000u; }
 
-// On the MCU these busy-wait while time passes. On the host, time only
-// advances with the simulator, so they return immediately. They are used by
-// sensor start-up sequences (whose hardware is simulated) and are counted
-// after initialisation so that any use in the flight loop is visible.
-void delay(uint32_t /*ms*/) {
+// On the MCU these busy-wait while time passes. During start-up
+// (MagisHost::Initialise) they advance the firmware clock the same way, so
+// timed start-up sequences work as on the MCU: e.g. icp10111BaroCalibrate()
+// waits with delay() for baro conversions and would otherwise never see one
+// complete (ground pressure left at 0). MagisHost keeps the resulting boot
+// time as an offset between the firmware clock and the simulation clock.
+// After initialisation they return immediately (time only advances with the
+// simulator) and are counted, so that any use in the flight loop is visible.
+void delay(uint32_t ms) {
   if (State().initialised) {
     ++State().delay_calls_after_init;
+  } else {
+    State().time_us += ms * 1000u;
   }
 }
 
-void delayMicroseconds(uint32_t /*us*/) {
+void delayMicroseconds(uint32_t us) {
   if (State().initialised) {
     ++State().delay_calls_after_init;
+  } else {
+    State().time_us += us;
   }
 }
 

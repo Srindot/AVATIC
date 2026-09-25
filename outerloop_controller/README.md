@@ -1,130 +1,55 @@
-# Outer-loop controller: your code goes here
+# Your controller
 
-You write the algorithm that finds balloons in the camera image and flies
-the Pluto X into them. Everything else is already running inside the
-simulator: the drone's physics, the real MagisV2 flight-controller firmware
-(it stabilises the drone), the camera and the arena with its scoring.
+This folder is yours. Write your balloon-popping code in
+**`my_controller.py`**, in the `step()` method of `MyController`.
 
 ```text
 outerloop_controller/
-  my_controller.py      <- YOUR controller: start here
-  examples/hello_drone.py   take off, hold 1 m, turn, look at the camera
-  avatic_drone/         the interface (read it, don't change it)
+  my_controller.py          YOUR controller: start here (it climbs to 1 m and hovers)
+  examples/hello_drone.py   example: take off, turn, count balloon colours in the camera
+  avatic_drone/             the drone interface (do not change it)
 ```
 
-You only use plain Python (NumPy, OpenCV, anything). You never need to
-write ROS code.
+**New here? Read the [participant guide](../docs/participants/README.md).**
 
-## Run
+## Quick reference
 
-Terminal 1, the simulator (Gazebo view plus RViz with the drone's camera):
+Run (from the repository folder, after the two `source` lines):
 
 ```bash
-source /opt/ros/humble/setup.bash && source install/setup.bash
-ros2 launch pluto_x_bringup competition.launch.py
+ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controller/my_controller.py
 ```
 
-Terminal 2, your controller:
-
-```bash
-source /opt/ros/humble/setup.bash && source install/setup.bash
-python3 outerloop_controller/my_controller.py
-```
-
-Every launch places the balloons at new random positions. It prints the
-seed; pass `arena_seed:=<seed>` to fly the same layout again. Add
-`headless:=true rviz:=false` to run without windows (faster, e.g. for
-batch testing).
-
-## The task
-
-| Balloon | Points |
-|---|---|
-| green | +100 |
-| blue | +50 |
-| yellow | +25 |
-| **red** | **−75, avoid it** |
-
-A balloon pops when the drone touches it. You have **15 s from the moment
-you arm**. When the time is up the simulation pauses and the result is
-printed in terminal 1.
-
-## The interface (`from avatic_drone import Drone`)
+Your `step()` is called 20 times per second:
 
 ```python
-drone = Drone()               # connect to the running simulator
-drone.wait_until_ready()      # flight controller calibrated (~4 s after start)
-drone.arm()                   # motors on; the 15 s start now
-
-for step in drone.loop(hz=20):     # runs until the time is up
-    frame = drone.get_frame()      # camera
-    tel = drone.get_telemetry()    # flight-controller estimates
-    drone.send_command(roll=0.0, pitch=0.0, yaw_rate=0.0, throttle=0.76)
-
-drone.close()
+def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 15)
+    ...
+    return Command(roll=0.0, pitch=0.0, yaw_rate=0.0, throttle=0.76)
 ```
 
-**Camera:** `drone.get_frame()` returns a `Frame` with:
-- `.image`: NumPy array, 720 × 1280 × 3, uint8, RGB (for OpenCV, convert
-  with `cv2.cvtColor(frame.image, cv2.COLOR_RGB2BGR)`);
-- `.time_s`: when the frame was taken;
-- `.seq`: the frame number. The camera (about 18 fps) is slower than a
-  typical control loop, so compare `seq` to skip frames you have already
-  processed.
-
-The camera is about 18 frames per second, forward-facing, about 80° field
-of view. In the simulator frames arrive without delay; on the real drone
-expect 150–400 ms of video delay.
-
-**Telemetry:** `drone.get_telemetry()` returns the flight controller's own
-estimates:
-
-| field | meaning |
-|---|---|
-| `roll_deg` | + = right side down |
-| `pitch_deg` | + = nose up |
-| `heading_deg` | clockwise from north |
-| `altitude_m` | barometric, relative to take-off |
-| `battery_v` | battery voltage |
-| `armed` | motors armed |
-
-There is no position or velocity: the real drone doesn't have them either.
-
-**Commands:** `drone.send_command(roll, pitch, yaw_rate, throttle)`
-
-| value | range | meaning |
+| Command | range | meaning |
 |---|---|---|
-| `roll` | −1 … 1 | **bank angle**: + = bank right (about 32° at 1.0) |
-| `pitch` | −1 … 1 | **tilt angle**: + = nose down, i.e. move forward |
-| `yaw_rate` | −1 … 1 | **turn rate**: + = clockwise (about 77 °/s at 1.0) |
-| `throttle` | 0 … 1 | thrust: about 0.76 hovers (it drifts as the battery drains) |
+| `roll` | −1 … 1 | tilt right (+), so the drone slides right (0.2 ≈ 7°, max 20°) |
+| `pitch` | −1 … 1 | nose down (+), so the drone flies forward |
+| `yaw_rate` | −1 … 1 | turn clockwise (+), about 77°/s at 1.0 |
+| `throttle` | 0 … 1 | lift; about **0.76 hovers** |
 
-Roll and pitch are angles the firmware holds; only yaw is a rate. This is
-exactly what the real Pluto X accepts. If you stop calling `send_command`
-for 0.5 s, a failsafe levels the sticks, stops the yaw and sets the
-throttle to an estimate of hover (the average of your recent throttle)
-until your next call.
+| Input | what it is |
+|---|---|
+| `frame.image` | camera picture, NumPy (720, 1280, 3), RGB; `frame.seq` = picture number |
+| `telemetry.altitude_m` | height from the barometer (m) |
+| `telemetry.heading_deg` | 0 = north, 90 = east (start), clockwise |
+| `telemetry.roll_deg`, `.pitch_deg` | tilt (+ = right side down / nose up) |
 
-Use only one `Drone()` per run: two scripts sending commands at once would
-fight over the drone.
+| Balloon | green | blue | yellow | red |
+|---|---|---|---|---|
+| Points | +100 | +50 | +25 | **−75** |
 
-**Arena and time:**
-- `drone.arena()` returns the `.score`, `.time_remaining_s`, `.finished`
-  and `.events` (the pops) of the run.
-- `drone.time()` is the simulation time; `drone.sleep(s)` and
-  `drone.loop(hz)` use it.
+15 s from arming. The best possible score is 350.
 
-## Tips
+**Remember:** keep the throttle smooth and above about 0.5 in the air,
+don't use `altitude_hold`, and keep your files in this folder.
 
-- **Take off straight up first.** Tilting or yawing while still on the
-  ground presses the drone into the ground instead of lifting it.
-- **Turn to centre a balloon, then move towards it.** Slow, smooth
-  corrections work better than fast ones, especially once video delay is
-  added.
-- **Leave the red balloons alone.** Touching one costs 75 points.
-
-## Do not edit
-
-`simulation_engine/` is the simulator (physics, firmware, arena, scoring).
-Your submission is `outerloop_controller/my_controller.py` (plus any
-modules you add here).
+On the real drone: `python3 outerloop_controller/my_controller.py --hardware`
+([guide page 7](../docs/participants/7_real_drone.md)).

@@ -1,0 +1,5 @@
+# Balloon-layout seed for development runs (see analysis/README.md).
+# Every competition launch uses it until you change it:
+#   python3 analysis/new_seed.py          # a new random layout
+#   python3 analysis/new_seed.py --seed 7 # a specific layout
+seed: 42

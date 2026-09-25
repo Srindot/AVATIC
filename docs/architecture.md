@@ -1,6 +1,6 @@
 # Pluto X simulation: architecture, MagisV2 in the loop, outer-loop controllers
 
-Status 2026-09-24. This is the current architecture. The legacy kwad.cpp
+Status 2026-09-25. This is the current architecture. The legacy kwad.cpp
 stack is still available as an alternative flight controller; its port is
 documented in [legacy_port.md](legacy_port.md) and its parameters in
 [pluto_x_parameters.md](pluto_x_parameters.md).
@@ -8,50 +8,59 @@ documented in [legacy_port.md](legacy_port.md) and its parameters in
 ## 1. Overview
 
 ```text
- participant code                 ROS 2                       Gazebo Harmonic (gz sim, 1 ms steps)
- ────────────────                 ─────                       ────────────────────────────────────
- OuterLoopController ──┐
- (Python class)        │   outer_loop_host ── /pluto/rc ──►  fc_link ── gz /pluto/rc ──► VehicleSystem plugin
-                       └──  (arming, landing,  RcCommand            (Int32_V, AETR1234)   │
-                            failsafe, rate)                                               ├─ SimulatedVehicle
-            ▲                     ▲                                                       │   ├─ wind
-            │ Observation         │ /pluto/fc_status  ◄── fc_link ◄── gz /pluto/fc_telemetry   ├─ RC link latency
-            │ (dev: ground truth) │ FlightControllerStatus         (Double_V)            │   ├─ FlightController:
-  /sim/pluto/odometry ◄── ros_gz_bridge ◄── OdometryPublisher                            │   │    MagisV2 firmware
-                                                                                         │   │    (or legacy stack)
-                                                                                         │   ├─ propulsion (motor
-                                                                                         │   │   lag, battery)
-                                                                                         │   └─ external wrench
-                                                                                         └─ AddWorldWrench → physics
+ participant code                  ROS 2                        Gazebo Harmonic (gz sim, 1 ms steps)
+ ────────────────                  ─────                        ────────────────────────────────────
+ my_controller.py
+   avatic_drone.Drone ── /pluto/rc (50 Hz) ──►  fc_link ── gz /pluto/rc ──► VehicleSystem plugin
+   (safety caps,        RcCommand                        (Int32_V, AETR1234)   ├─ SimulatedVehicle
+    failsafe, ceiling)                                                         │   ├─ wind, RC link latency
+        ▲  ◄── /pluto/fc_status ◄── fc_link ◄── gz /pluto/fc_telemetry        │   ├─ FlightController:
+        │      (FC estimates only)                                             │   │    MagisV2 firmware
+        ◄── /pluto/camera/image_raw ◄── ros_gz_bridge ◄── camera sensor       │   ├─ propulsion, battery
+        ◄── /arena/score, time_remaining, events ◄── arena_system         │   └─ external wrench
+                                                                               └─ AddWorldWrench → physics
+ run_recorder ◄── everything above + /sim/pluto/odometry (ground truth, judges only)
+              ──► analysis/runs/<date-time>/  (or evaluation/sessions/...)
+
+ on the real Pluto X the same controller file runs with --hardware:
+   avatic_drone.Drone(backend='hardware') → hitl/avatic_hitl: MSP v1 over TCP
+   (192.168.0.1:9060) + the plutocam H.264 camera stream
 ```
 
 What runs where:
 
 | Layer | What | Where |
 |---|---|---|
-| Outer loop | mission, guidance, waypoint / visual-servoing control | participant `OuterLoopController`, hosted by `pluto_x_autonomy/outer_loop_host` |
-| Link | RC channels to the vehicle, telemetry back (the real Pluto X uses MSP over Wi-Fi) | `pluto_x_ros/fc_link` |
-| Flight controller | the **production MagisV2 firmware**: sensor calibration, attitude estimator, angle mode, altitude hold, PID, mixer, arming, failsafe | `pluto_x_magisv2` (host build of the unmodified firmware) |
-| Vehicle | sensors (IMU, baro, magnetometer, battery monitor), motors, battery, aerodynamics | `pluto_x_core` (`SimulatedVehicle`), in the Gazebo plugin |
+| Outer loop | the participant's visual-servoing controller (camera + FC telemetry only) | `outerloop_controller/my_controller.py`, through `avatic_drone` |
+| Link | RC channels to the vehicle, telemetry back (the real Pluto X uses MSP over Wi-Fi) | sim: `pluto_x_ros/fc_link`; hardware: `hitl/avatic_hitl` |
+| Flight controller | the **production MagisV2 firmware**: sensor calibration, attitude estimator, angle mode, altitude hold, PID, mixer, arming, failsafe | `pluto_x_magisv2` (host build of the unmodified vendored source; two `MAGIS_HOST`-guarded patches, §4) |
+| Vehicle | sensors (IMU, baro, magnetometer, battery monitor, camera), motors, battery, aerodynamics | `pluto_x_core` (`SimulatedVehicle`), in the Gazebo plugin |
 | Rigid body | integration, gravity, ground contact | Gazebo physics (DART) |
 
-The participant interface is **RC in, telemetry out**, the same as the
-real Pluto X offers. A controller written against it can be moved to the
-vehicle by swapping `fc_link` for a hardware MSP bridge (not written yet).
-The observation (ground truth in the simulator) has to be replaced by the
-team's own perception or estimation.
+The participant interface is **sticks in, camera + telemetry out**, the
+same as the real Pluto X offers; the same controller file flies either
+backend. `pluto_x_ros/scripts/msp_sim_bridge.py` serves the simulator over
+the hardware protocol (MSP on TCP 9060, H.264 on 9061), to test the
+hardware backend without a drone.
+
+The developer path of section 5 (`outer_loop_host`, ground-truth
+observation) is kept for simulator validation (sim.launch.py,
+arena.launch.py, the check scripts); participants do not use it.
 
 ## 2. Packages
 
 ```text
-third_party/magisv2      MagisV2 firmware, vendored unmodified (GPL-3.0-or-later; PROVENANCE.md)
+firmware/magisv2      MagisV2 firmware, vendored unmodified (GPL-3.0-or-later; PROVENANCE.md)
 simulation_engine/pluto_x_core         vehicle model, sensors, legacy stack, FlightController interface, config (no ROS/Gazebo)
 simulation_engine/pluto_x_magisv2      host build of MagisV2 + MagisHost facade + MagisFlightController (GPL)
 simulation_engine/pluto_x_gazebo       VehicleSystem plugin (links pluto_x_magisv2, so GPL), model, world
-simulation_engine/pluto_x_interfaces   RcCommand.msg, FlightControllerStatus.msg
-simulation_engine/pluto_x_ros          fc_link (RC + telemetry link)
-simulation_engine/pluto_x_autonomy     OuterLoopController API, outer_loop_host, supervisor, examples (Python)
-simulation_engine/pluto_x_bringup      sim.launch.py, legacy_sim.launch.py, bridge config, end-to-end checks
+simulation_engine/pluto_x_interfaces   RcCommand.msg, FlightControllerStatus.msg, OuterLoopSetpoint.msg
+simulation_engine/pluto_x_ros          fc_link (RC + telemetry link), msp_sim_bridge.py (hardware protocol test bridge)
+simulation_engine/pluto_x_autonomy     developer OuterLoopController API, outer_loop_host, supervisor, examples (Python)
+outerloop_controller/                  participant template + avatic_drone API (sim / hardware backends)
+hitl/                                  hardware backend: MSP client, camera decoder
+analysis/, evaluation/                 run recordings, notebooks, the multi-layout evaluator
+simulation_engine/pluto_x_bringup      competition / arena / sim / legacy_sim launches, run_recorder, bridge config, end-to-end checks
 ```
 
 ## 3. Flight controller interface (`pluto_x_core`)
@@ -85,7 +94,7 @@ YAML before validation.
 
 ### Build
 
-* `third_party/magisv2` is never edited. At configure time CMake copies it
+* `firmware/magisv2` is never edited. At configure time CMake copies it
   into the build tree and applies `simulation_engine/pluto_x_magisv2/patches/*.patch`.
   Every patch is guarded by `MAGIS_HOST`:
   * `0001-host-config-flash-buffer`: the configuration "flash" is a host
@@ -155,8 +164,53 @@ YAML before validation.
    with the 8 g camera module fitted (68 g; 1720 µs without it).
    This follows from the linear duty-to-speed assumption and the estimated
    thrust coefficient. A thrust-stand measurement will move it.
+5. **The firmware re-zeroes the baro in near-free-fall (affects hardware
+   too).** With the arm switch on and throttle above `mincheck`,
+   `io/rc_controls.cpp:183-186` calls `mwArm()` whenever
+   `netAccMagnitude < 11` (under 0.33 g of specific force: the "throw to
+   arm" feature), also when already armed; `mw.cpp:579-583` then calls
+   `baroResetGroundLevel()`, which takes the current pressure as the new
+   ground. A throttle cut that gives a downward acceleration beyond about
+   6.5 m/s² in flight therefore resets the altitude to about 0 at the
+   current height, once per RC frame while it lasts, and the offsets add
+   up. Found 2026-09-25 with an undamped altitude loop (throttle swinging
+   between 0 and the 0.95 cap): the true height reached 12.9 m while the
+   estimate read about 3 m, and the 2.5 m safety ceiling (which uses the
+   estimate) did not engage. Replaying the run with the ground pressure held
+   after arming keeps the baro within 0.5 m of the truth, so the sensor
+   model is not the cause. Normal flight never triggers it (baro error
+   ≤ 0.3 m in the recorded runs). Participant guidance: damp the altitude
+   loop, never cut the throttle hard in flight (outerloop_controller/README.md).
+6. **Boot-time baro calibration (fixed in the host facade, 2026-09-25).**
+   `icp10111BaroCalibrate()` waits for conversions with `delay()`, which
+   used to return without advancing time on the host, so the calibration
+   never saw a reading and left the ground pressure at 0. It was hidden
+   because the repeated `mwArm()` on the pad (finding 5) set the ground
+   level. `delay()` now advances the firmware clock during start-up
+   (host/hal_system.cpp); `MagisHost` keeps the resulting boot time (about
+   1.85 s) as an offset between the firmware and simulation clocks. Checked
+   by test_magis_host (ground pressure after boot = the simulated pressure).
+7. **Altitude hold assumes hover at 1500 us: the simulated drone drops
+   (OPEN, 2026-09-25).** Entering BARO mode sets `initialThrottleHold =
+   1500` (`flight/altitudehold.cpp:283`); the hold throttle is then 1500 us
+   + the altitude PID's adjustment. The simulated Pluto X hovers at about
+   1760 us (finding 4, an estimate), so 1500 us gives about 43 % of the
+   weight (thrust ~ duty^2) and the vehicle hits the ground from 1.2 m in
+   under a second, before the PID catches up (measured: engaging altitude
+   hold at 1.24 m, truth 0.02 m one second later). The firmware's land
+   command relies on altitude hold (it forces the throttle to 1300 us =
+   -50 cm/s in BARO mode, a raw 30 % throttle without it). Either the real
+   Pluto X hovers near 1500 us (then the thrust model's hover is wrong and
+   should be re-estimated) or the real drone dips too. Measure hover
+   throttle on hardware (first session) before changing the model. Until
+   then: participants fly without altitude hold; the hardware backend lands
+   in altitude hold (the firmware's design); the MSP test bridge emulates
+   that landing without the simulated firmware's altitude hold.
 
-## 5. Writing an outer-loop controller (`pluto_x_autonomy`)
+## 5. Developer outer-loop controllers (`pluto_x_autonomy`)
+
+For simulator validation only; participants use `avatic_drone`
+(outerloop_controller/README.md).
 
 Subclass `pluto_x_autonomy.api.OuterLoopController`:
 
@@ -238,10 +292,10 @@ demonstrates the interface; it is not a tuned mission controller.
 
 | Check | Command | Result (2026-09-24) |
 |---|---|---|
-| Core unit tests | `colcon test --packages-select pluto_x_core` | 122 pass |
+| Core unit tests | `colcon test --packages-select pluto_x_core` | 129 pass (2026-09-25) |
 | MagisV2 host: boot, calibrate, arm, attitude and yaw responses | `pluto_x_magisv2_tests` | pass |
 | MagisV2 closed loop (reference integrator): on the ground at mid throttle, climb, roll, pitch and yaw responses, telemetry signs, disarm | `pluto_x_magisv2_flight_controller_tests` | pass |
-| Outer-loop layer: RC map, loader, supervisor phases and failsafes, waypoint geometry, point-mass mission | `colcon test --packages-select pluto_x_autonomy` | 15 pass |
+| Outer-loop layer: RC map, loader, supervisor phases and failsafes, waypoint geometry, point-mass mission | `colcon test --packages-select pluto_x_autonomy` | 20 pass (2026-09-25) |
 | Gazebo end-to-end: MagisV2 + fc_link + host fly the square mission | `simulation_engine/scripts/check_mission.sh` | all waypoints within 0.10 m, settled tracking error 0.15 m (wind on), max tilt 9.4° (68 g with camera); touch-down point reported, not checked |
 | Same with a rotated start (checks the body-frame handling) | `SPAWN_YAW=2.0 simulation_engine/scripts/check_mission.sh` | mission completed |
 | Yaw axis: stick steps (open loop) and a 450° heading scan (closed loop) | `simulation_engine/scripts/check_yaw.sh` | all pass; see "Yaw axis" in §6 |
@@ -286,7 +340,7 @@ Closed loop: `WaypointController` with headings (`config/yaw_scan.yaml`:
 |---|---|
 | heading error while turning | mean 0.7°, max 3.9° (the lag behind a 45 °/s ramp) |
 | settled heading error | mean 0.06°, max 0.14° |
-| position drift over the 450° scan | max 0.087 m (no wind); max 0.58 m with the default 0.3 m/s gusts, the same as hovering without yawing (the example outer loop's gust rejection) |
+| position drift over the 450° scan | max 0.087 m (no wind); max 0.58 m with the then-default 0.3 m/s gusts (now 0.15 m/s), the same as hovering without yawing (the example outer loop's gust rejection) |
 | altitude deviation | max 4 mm |
 | firmware heading estimate vs truth | mean +0.36°, max 1.3°. The mean is the magnetic declination of the configured field (−0.43°): the firmware reports magnetic heading. Its heading estimate is good despite the gyro-scale mismatch in §4 finding 1, because the magnetometer corrects it. |
 

@@ -11,6 +11,8 @@
 
 #include "pluto_x_magisv2/magis_host.hpp"
 
+extern float baroGroundPressure;  // firmware sensors/barometer.cpp
+
 namespace pluto_x_magisv2 {
 namespace {
 
@@ -95,6 +97,14 @@ TEST(MagisHost, BootCalibrateArmAndAttitudeResponse) {
   MagisHost& fc = MagisHost::Instance();
   fc.Initialise(0, Tilted(0.0, 0.0));
   EXPECT_THROW(fc.Initialise(0, Tilted(0.0, 0.0)), std::logic_error);
+  // The boot-time baro calibration (icp10111BaroCalibrate) waits for
+  // conversions with delay(): it must complete and take the ground pressure,
+  // which needs the firmware clock to run through start-up delays.
+  EXPECT_NEAR(baroGroundPressure, 101325.0f, 1.0f);
+  EXPECT_GT(fc.boot_time_us(), 0u);
+  EXPECT_EQ(fc.time_us(), 0u);  // the caller's clock is unchanged
+  printf("[boot] start-up delays %.3f s, ground pressure %.1f Pa\n",
+         fc.boot_time_us() * 1e-6, baroGroundPressure);
 
   // Phase 1: power-up, level and still, disarmed.
   Fly(fc, 20000000, Rc(kLow, kLow));  // 20 s: gyro + baro calibration

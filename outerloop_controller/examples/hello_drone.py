@@ -35,17 +35,18 @@ def colour_pixels(image):
 
 def main():
     drone = Drone()
-    print('connected; waiting for the flight controller...')
-    drone.wait_until_ready()
-    drone.arm()
-    print(f'armed at t = {drone.time():.2f} s')
-    last_altitude, last_t = 0.0, drone.time()
     try:
+        print('connected; waiting for the flight controller...')
+        drone.wait_until_ready()
+        drone.arm()
+        start = drone.time()
+        print(f'armed at simulation time {start:.2f} s; t below = seconds since arming')
+        last_altitude, last_t = drone.get_telemetry().altitude_m, 0.0
         for step in drone.loop(hz=20):
-            t = drone.time()
+            t = drone.time() - start
             tel = drone.get_telemetry()
-            dt = max(t - last_t, 1e-3)
-            climb_rate = (tel.altitude_m - last_altitude) / dt
+            dt = t - last_t
+            climb_rate = (tel.altitude_m - last_altitude) / dt if dt > 0 else 0.0
             last_altitude, last_t = tel.altitude_m, t
             throttle = (HOVER_THROTTLE + ALTITUDE_GAIN * (TARGET_ALTITUDE_M - tel.altitude_m)
                         - CLIMB_DAMPING * climb_rate)

@@ -10,6 +10,9 @@
   <depend>rclcpp</depend>
   <depend>pluto_x_interfaces</depend>
   <depend>pluto_x_core</depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>ffmpeg</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
   <!-- gz-transport13 / gz-msgs10 from ros-humble-ros-gzharmonic -->
   <export>
     <build_type>ament_cmake</build_type>

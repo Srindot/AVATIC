@@ -12,6 +12,7 @@ install(PROGRAMS
   scripts/yaw_check.py
   scripts/arena_check.py
   scripts/arena_scoreboard.py
+  scripts/run_recorder.py
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

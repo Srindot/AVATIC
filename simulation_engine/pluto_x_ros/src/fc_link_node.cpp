@@ -107,10 +107,10 @@ class FcLink : public rclcpp::Node {
     const auto at = [&message](wire::Index i) { return message.data(i); };
     pluto_x_interfaces::msg::FlightControllerStatus status;
     const double t = at(wire::kSimTimeS);
-    status.header.stamp.sec = static_cast<std::int32_t>(std::floor(t));
-    status.header.stamp.nanosec =
-        static_cast<std::uint32_t>(std::llround((t - std::floor(t)) * 1e9) %
-                                   1000000000LL);
+    // integer nanoseconds first: a fraction rounding up to 1 s carries into sec
+    const std::int64_t t_ns = std::llround(t * 1e9);
+    status.header.stamp.sec = static_cast<std::int32_t>(t_ns / 1000000000LL);
+    status.header.stamp.nanosec = static_cast<std::uint32_t>(t_ns % 1000000000LL);
     status.header.frame_id = "base_link";
     status.armed = at(wire::kArmed) > 0.5;
     status.ok_to_arm = at(wire::kOkToArm) > 0.5;

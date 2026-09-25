@@ -12,18 +12,19 @@ pluto_x_magisv2/     MagisV2 firmware built for the PC + adapter (GPL-3.0-or-lat
 pluto_x_gazebo/      Gazebo plugins (vehicle, arena), models, worlds, arena generator
 pluto_x_interfaces/  ROS messages
 pluto_x_ros/         fc_link: RC and telemetry link (the MSP link of the real drone)
-pluto_x_autonomy/    outer-loop host and test controllers (used by the checks)
+pluto_x_autonomy/    StickCommand + RC mapping (used by the participant API), outer-loop host
+                     and test controllers (used by the checks)
 pluto_x_bringup/     launch files (sim, arena, competition), bridges, RViz, checks
 scripts/             verification scripts (run from the repository root)
 ```
 
-Firmware source: `third_party/magisv2` (vendored, never edited).
+Firmware source: `firmware/magisv2` (vendored, never edited).
 
 Launches:
 
 | | |
 |---|---|
-| `ros2 launch pluto_x_bringup competition.launch.py` | a participant run: random layout, the clock starts on arm, no built-in controller |
+| `ros2 launch pluto_x_bringup competition.launch.py` | a participant run: layout from `analysis/seed.yaml` (or `arena_seed:=random` / `N`), recorded to `analysis/runs/`, the clock starts on arm, no built-in controller |
 | `ros2 launch pluto_x_bringup arena.launch.py` | the arena with the fixed layout and the host-run test controller |
 | `ros2 launch pluto_x_bringup sim.launch.py` | the vehicle alone (no arena), host-run controller |
 

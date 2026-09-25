@@ -6,7 +6,9 @@ balloon size) from a base arena file and draws new balloon positions,
 reproducibly from a seed, under these constraints:
 
   spacing    the gap between any two balloon surfaces is at least the drone
-             width, so the drone always fits between two balloons:
+             width (0.16 m). The contact outline is 0.155 m wide flying
+             straight (0.19 m diagonally), so the drone fits between two
+             balloons only with little margin and when aligned with the gap:
              horizontal centre distance >= balloon diameter + drone width
              (horizontal, so balloons are never stacked)
   compact    every balloon within --max-radius of the take-off point, and
@@ -109,10 +111,12 @@ def generate(counts, p, seed, attempts=20000):
                     break
             else:
                 break
+        # check the positions as written (rounded to 1 mm), not before rounding
+        positions = [[round(v, 3) for v in pos] for pos in positions]
         if len(positions) == total and not check_layout(positions, p):
             colours = [c for c, n in counts.items() for _ in range(n)]
             rng.shuffle(colours)
-            return [{'color': col, 'position_enu_m': [round(v, 3) for v in pos]}
+            return [{'color': col, 'position_enu_m': pos}
                     for col, pos in zip(colours, positions)]
     return None
 

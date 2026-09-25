@@ -641,8 +641,9 @@ std::string DescribeLegacyStackConfig(const LegacyStackConfig& config) {
   out << "actuation: thrust in [" << a.thrust_min_n << ", " << a.thrust_max_n
       << "] N, |torque|(roll,pitch,yaw) <= ("
       << a.torque_limit_n_m.transpose() << ") N m\n";
-  out << "controller: period=" << config.controller.period_s
-      << " s (cascade position -> attitude -> rate -> plus mixer), "
+  out << "legacy controller (used only with flight_controller: legacy): period="
+      << config.controller.period_s
+      << " s (cascade position -> attitude -> rate -> mixer), "
       << "position error_frame="
       << PositionErrorFrameName(config.controller.position.error_frame)
       << "\n";

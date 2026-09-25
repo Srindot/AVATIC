@@ -23,7 +23,8 @@ vehicle:
   #   guards   55 mm props in 59 mm rings centred at (+-47.5, +-47.5) mm:
   #            r = 30 mm reaches the 77 mm half-width
   #   body     96 x 96 x 30 mm centre
-  #   camera   8 g module on top, towards the front [EST position]
+  #   camera   8 g module below the body, towards the front (as the
+  #            vehicle's camera mount, position_flu 0.035, 0, -0.018) [EST]
   # The spheres overstate the guards' thickness (+-30 mm vs +-12 mm).
   contact_spheres:
     - {position_flu_m: [ 0.0475,  0.0475, 0.0], radius_m: 0.030}
@@ -31,7 +32,7 @@ vehicle:
     - {position_flu_m: [-0.0475,  0.0475, 0.0], radius_m: 0.030}
     - {position_flu_m: [-0.0475, -0.0475, 0.0], radius_m: 0.030}
     - {position_flu_m: [ 0.0,     0.0,    0.005], radius_m: 0.030}
-    - {position_flu_m: [ 0.030,   0.0,    0.015], radius_m: 0.015}
+    - {position_flu_m: [ 0.035,   0.0,   -0.018], radius_m: 0.015}
 
 balloon:
   # [ASSUMPTION] a standard 12-inch party balloon. The mesh

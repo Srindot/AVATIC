@@ -7,7 +7,7 @@
     Host (PC) build of the Pluto X MagisV2 flight-controller firmware, with a
     small hardware-abstraction shim and a C++ facade for the simulator. The
     production control code is compiled unmodified from the vendored copy in
-    third_party/magisv2 (plus documented, MAGIS_HOST-guarded patches).
+    firmware/magisv2 (plus documented, MAGIS_HOST-guarded patches).
   </description>
   <maintainer email="srinath.bhamidipati@research.iiit.ac.in">srindot</maintainer>
   <!-- Links MagisV2 (GPL-3.0-or-later), so this package is GPL as well. -->

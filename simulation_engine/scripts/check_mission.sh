@@ -13,6 +13,10 @@
 # is stopped afterwards, so no Gazebo server is left behind.
 set -euo pipefail
 
+# on any exit (error, Ctrl-C) never leave a simulation running
+SIM_PGID=""
+trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
+
 readonly OUT=log/mission
 readonly SHUTDOWN_GRACE_S=10
 readonly PARAMS="${PARAMS:-$(ros2 pkg prefix pluto_x_autonomy)/share/pluto_x_autonomy/config/waypoint_square.yaml}"
@@ -25,6 +29,7 @@ setsid ros2 launch pluto_x_bringup sim.launch.py headless:=true \
   controller:="${CONTROLLER}" controller_params_file:="${PARAMS}" \
   spawn_yaw:="${SPAWN_YAW}" ${CONFIG_FILE:+config_file:="${CONFIG_FILE}"} > "${OUT}/sim.log" 2>&1 &
 sim_pid=$!
+SIM_PGID="${sim_pid}"
 status=0
 ros2 run pluto_x_bringup mission_check.py "${PARAMS}" \
   --csv "${OUT}/track.csv" 2>&1 | tee "${OUT}/check.log" || status=$?

@@ -99,7 +99,7 @@
                          x="0" y="0" z="0" colour="0.15 0.15 0.15 1"/>
       <xacro:mesh_visual name="cap" mesh="cap.dae" scale="0.0088"
                          x="0" y="-0.008" z="0.027" colour="0.05 0.05 0.05 1"/>
-      <xacro:rotor_visuals index="1" sx="-1" sy="-1" prop_mesh="prop1.dae"
+      <xacro:rotor_visuals index="1" sx="-1" sy="-1" prop_mesh="prop.dae"
                            prop_z="0.025" guard_yaw="${-pi / 4}"/>
       <xacro:rotor_visuals index="2" sx="-1" sy="1" prop_mesh="prop.dae"
                            prop_z="0.025" guard_yaw="${-3 * pi / 4}"/>

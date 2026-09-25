@@ -21,4 +21,6 @@ target_link_libraries(fc_link
 target_compile_options(fc_link PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 install(TARGETS fc_link DESTINATION lib/${PROJECT_NAME})
+# MSP-over-TCP test bridge for the hardware backend (Python)
+install(PROGRAMS scripts/msp_sim_bridge.py DESTINATION lib/${PROJECT_NAME})
 ament_package()

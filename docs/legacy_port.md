@@ -12,7 +12,7 @@ MagisV2.
 
 Two parameter sets ship:
 * `pluto_x_estimated.yaml` (**default**): estimated Pluto X parameters
-  (60 g, X layout, rescaled legacy gains). These are estimates, not
+  (68 g with the camera module, X layout, rescaled legacy gains). These are estimates, not
   measurements; see [pluto_x_parameters.md](pluto_x_parameters.md).
 * `legacy_kwad.yaml`: the original `kwad.cpp` values (1.4 kg, 0.56 m arm,
   "+" layout), kept for reproducing the legacy behaviour. §5–§9 below
@@ -66,7 +66,7 @@ set directly (`SetModelState`-style teleporting is not used).
 ## 2. Package structure
 
 ```text
-src/
+simulation_engine/
 ├── pluto_x_core/            pure C++17 (Eigen, yaml-cpp) + gtest
 │   ├── config/pluto_x_estimated.yaml    default parameters (estimated Pluto X)
 │   ├── config/legacy_kwad.yaml          original kwad.cpp parameters
@@ -78,7 +78,7 @@ src/
 │   │   └── dynamics/ vehicle_state, legacy_dynamics, enu_adapter
 │   ├── src/…                            implementations
 │   ├── tools/legacy_reference_sim.cpp   offline closed-loop reference run
-│   └── test/                            103 unit tests
+│   └── test/                            unit tests (129 on 2026-09-25)
 ├── pluto_x_gazebo/          gz-sim system plugin + model + world
 │   ├── src/vehicle_system.cpp           ECM glue, RC in, telemetry out, wrench
 │   ├── models/pluto_x/model.sdf.xacro   model; mass/inertia read from the YAML
@@ -382,19 +382,20 @@ Together these confirm:
 
 ## 13. Build, run, test
 
-All commands run in the dev container through `simulation_engine/scripts/dev.sh`. The host
-has no Gazebo installed.
+Native, from the repository root (ROS 2 Humble + Gazebo Harmonic;
+`simulation_engine/scripts/dev.sh` runs the same commands in a container,
+optional: set `PLUTO_DEV_IMAGE` to your image).
 
 ```bash
-simulation_engine/scripts/dev.sh colcon build
+source /opt/ros/humble/setup.bash && colcon build
 ```
 
 ```bash
-simulation_engine/scripts/dev.sh colcon test --packages-select pluto_x_core
+colcon test --packages-select pluto_x_core
 ```
 
 ```bash
-simulation_engine/scripts/dev.sh ./build/pluto_x_core/pluto_x_core_tests
+./build/pluto_x_core/pluto_x_core_tests
 ```
 
 Dynamics and coordinate-frame checks (≈ 2 min, headless):
@@ -406,7 +407,7 @@ simulation_engine/scripts/check_dynamics.sh
 Full end-to-end validation (≈ 4 min, headless):
 
 ```bash
-simulation_engine/scripts/dev.sh simulation_engine/scripts/validate_legacy_sim.sh
+simulation_engine/scripts/validate_legacy_sim.sh
 ```
 
 Interactive, with the Gazebo GUI (flies the configured position-hold

@@ -27,7 +27,9 @@ lands.
 
 Stick-to-tilt scale: tilt_per_stick_deg is the steady bank the firmware
 holds per unit stick. The default (32 deg) was measured in the simulator
-(0.2 stick -> 6.5 deg firmware estimate); measure it on hardware too.
+(0.2 stick -> 6.5 deg firmware estimate); it is the small-stick slope
+of the firmware's expo curve, which saturates at 20 deg from ~0.45 stick,
+so keep tilt commands small; measure it on hardware too.
 hover_throttle is only the starting point of the throttle integrator.
 
 This is an example of the interface, not a tuned mission controller.

@@ -3,7 +3,7 @@ project(pluto_x_magisv2 C CXX)
 
 # Host build of the MagisV2 flight-controller firmware (GPL-3.0-or-later).
 #
-# The vendored firmware in third_party/magisv2 is never edited. At configure
+# The vendored firmware in firmware/magisv2 is never edited. At configure
 # time it is copied into the build tree and the patches in patches/ are
 # applied to the copy (each patch is guarded by MAGIS_HOST and documented).
 # The production flight-control modules are compiled unmodified from that
@@ -13,7 +13,7 @@ project(pluto_x_magisv2 C CXX)
 find_package(ament_cmake REQUIRED)
 find_package(pluto_x_core REQUIRED)
 
-set(MAGIS_VENDOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/magisv2"
+set(MAGIS_VENDOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../firmware/magisv2"
     CACHE PATH "Vendored MagisV2 firmware (unmodified upstream copy)")
 set(MAGIS_ROOT "${CMAKE_CURRENT_BINARY_DIR}/magisv2")
 set(MAGIS_SRC "${MAGIS_ROOT}/src/main")

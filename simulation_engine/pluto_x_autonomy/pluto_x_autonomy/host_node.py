@@ -1,4 +1,5 @@
-"""outer_loop_host: runs a participant OuterLoopController on the Pluto X.
+"""outer_loop_host: runs a developer OuterLoopController on the Pluto X
+(simulator validation and the check scripts; not the participant path).
 
   observation   /sim/pluto/odometry (nav_msgs/Odometry), simulator ground
                 truth, when observation_source = ground_truth (development

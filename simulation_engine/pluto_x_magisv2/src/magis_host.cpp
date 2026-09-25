@@ -58,7 +58,9 @@ MagisHost& MagisHost::Instance() {
   return instance;
 }
 
-std::uint32_t MagisHost::time_us() const { return host::State().time_us; }
+std::uint32_t MagisHost::time_us() const {
+  return host::State().time_us - boot_offset_us_;
+}
 
 // Mirrors main.cpp init(). Calls marked [skipped] configure STM32 hardware
 // that has no host counterpart; every other call is made, in init()'s order:
@@ -160,6 +162,9 @@ void MagisHost::Initialise(std::uint32_t time_us,
   pwm_output.motorCount = kMotorCount;
   mixerUsePWMOutputConfiguration(&pwm_output);
 
+  // the firmware clock ran on through start-up delays (hal_system.cpp):
+  // from now on it leads the caller's clock by this boot time
+  boot_offset_us_ = host::State().time_us - time_us;
   host::State().initialised = true;
   initialised_ = true;
 }
@@ -181,6 +186,7 @@ void MagisHost::RunUntil(std::uint32_t target_time_us) {
     throw std::logic_error("MagisHost::RunUntil before Initialise");
   }
   host::HostState& state = host::State();
+  target_time_us += boot_offset_us_;  // caller clock -> firmware clock
   // Unsigned wrap-safe comparison, as the firmware itself uses.
   if (static_cast<std::int32_t>(target_time_us - state.time_us) < 0) {
     throw std::invalid_argument("MagisHost::RunUntil: time must not decrease");

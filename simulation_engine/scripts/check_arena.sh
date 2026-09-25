@@ -10,6 +10,10 @@
 #   FORBID=red simulation_engine/scripts/check_arena.sh        # fail if a red (penalty) balloon popped
 set -euo pipefail
 
+# on any exit (error, Ctrl-C) never leave a simulation running
+SIM_PGID=""
+trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
+
 readonly OUT=log/arena
 readonly SHUTDOWN_GRACE_S=10
 readonly PARAMS="${PARAMS:-$(ros2 pkg prefix pluto_x_autonomy)/share/pluto_x_autonomy/config/arena_demo.yaml}"
@@ -22,6 +26,7 @@ setsid ros2 launch pluto_x_bringup arena.launch.py headless:=true rviz:=false \
   result_file:="${PWD}/${OUT}/result.yaml" ${TIME_LIMIT:+time_limit_s:="${TIME_LIMIT}"} \
   > "${OUT}/sim.log" 2>&1 &
 sim_pid=$!
+SIM_PGID="${sim_pid}"
 status=0
 ros2 run pluto_x_bringup arena_check.py --min-pops "${MIN_POPS:-2}" \
   --min-score "${MIN_SCORE:-75}" ${FORBID:+--forbid-colour "${FORBID}"} --save-frames "${OUT}" --odom-csv "${OUT}/track.csv" 2>&1 | tee "${OUT}/check.log" || status=$?

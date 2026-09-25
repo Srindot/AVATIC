@@ -26,7 +26,8 @@ Without windows: add `headless:=true rviz:=false`.
 through balloon positions it reads from the arena file, using the
 simulator's exact drone position. Participants have neither: their
 controller (`outerloop_controller/`) must find the balloons with the
-camera, and every competition run places them at new random positions.
+camera, and the competition places them from a seed (a fixed development
+seed for tuning, unseen random seeds for evaluation and judging).
 
 ```text
 demo/

@@ -127,7 +127,12 @@ class MagisHost {
   FirmwareStatus Status() const;
 
   bool initialised() const { return initialised_; }
+  /// Current time on the caller's clock (the one passed to Initialise and
+  /// RunUntil).
   std::uint32_t time_us() const;
+  /// Simulated time the firmware spent in start-up delays (sensor
+  /// calibration); its own clock leads the caller's by this much.
+  std::uint32_t boot_time_us() const { return boot_offset_us_; }
 
  private:
   MagisHost() = default;
@@ -135,6 +140,7 @@ class MagisHost {
   bool initialised_{false};
   MagisHostOptions options_;
   std::uint32_t loop_calls_{0};
+  std::uint32_t boot_offset_us_{0};
 };
 
 }  // namespace pluto_x_magisv2

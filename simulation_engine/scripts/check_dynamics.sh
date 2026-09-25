@@ -9,6 +9,10 @@
 # are switched off; motor lag, drag and spin-up torque stay on.
 set -euo pipefail
 
+# on any exit (error, Ctrl-C) never leave a simulation running
+SIM_PGID=""
+trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
+
 readonly OUT=log/dynamics
 readonly CONFIG="${PLUTO_CONFIG:-simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml}"
 readonly SHUTDOWN_GRACE_S=10
@@ -56,6 +60,7 @@ for scenario in rest freefall forward right yaw; do
     paused:=true config_file:="${PWD}/${OUT}/${scenario}.yaml" \
     > "${OUT}/${scenario}_sim.log" 2>&1 &
   sim_pid=$!
+  SIM_PGID="${sim_pid}"
   status=0
   timeout 180 ros2 run pluto_x_bringup dynamics_check.py "${scenario}" \
     "${OUT}/${scenario}.yaml" 2>&1 | tee "${OUT}/${scenario}.log" || status=$?

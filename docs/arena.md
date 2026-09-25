@@ -1,6 +1,6 @@
 # Balloon arena: balloons, popping, score, time limit, camera
 
-Status 2026-09-24. Launch: `ros2 launch pluto_x_bringup arena.launch.py`.
+Status 2026-09-25. Launches: `competition.launch.py` (participant runs: seeded random layouts, clock from arming) and `arena.launch.py` (the fixed default layout below, developer checks).
 
 ## What it is
 
@@ -17,11 +17,14 @@ Status 2026-09-24. Launch: `ros2 launch pluto_x_bringup arena.launch.py`.
 Points: **green 100, blue 50, yellow 25, and red −75 (a penalty)**. Red
 balloons are obstacles: popping one subtracts 75 points. The default
 layout has two of each colour; the best achievable score is **350**
-(everything except red). The balloons are  at 1.2–4.3 m from the take-off point and
-0.9–1.9 m high. Higher-value balloons are farther away and higher, and
-several are behind the start heading, so the drone has to scan with yaw.
-Edit `balloons:` in the arena YAML to change the layout, or pass your own
-file with `arena_config:=`.
+(everything except red). In this default (demo) layout the balloons are
+1.6–4.0 m from the take-off point horizontally and 0.9–1.9 m high.
+Higher-value balloons are farther away and higher, and several are behind
+the start heading, so the drone has to scan with yaw. Editing `balloons:`
+(or `arena_config:=`) changes the layout for `arena.launch.py` and the
+demo. **Competition runs** (`competition.launch.py`) generate the positions
+from a seed (`analysis/seed.yaml`, `arena_seed:=`), taking only the rules
+and the per-colour counts from this file.
 
 ## Rules as implemented
 
@@ -43,6 +46,24 @@ file with `arena_config:=`.
   against the limit and about 11 s of flight remain.
   `clock_start: armed` starts the clock when the flight controller first
   reports ARMED.
+  **The competition uses `clock_start: armed`** (competition.launch.py
+  sets it): a participant gets the full 15 s of flight whatever the
+  firmware start-up time, as on the real drone, where the run starts when
+  the drone arms.
+* **Why 15 s and 8 balloons** (2 per colour; best score 350, reviewed
+  2026-09-25): in competition layouts (generate_arena.py) every balloon is
+  within 3.5 m of the take-off point and at most 2.0 m from a neighbour.
+  The shortest horizontal route from take-off through all six scoring
+  balloons is 5.2-11.8 m, median 8.4 m (computed over seeds 1-200), so
+  350 in 15 s needs only ~0.6 m/s on average, but a controller must also
+  find each balloon with the camera, turn to it and avoid the reds, which
+  takes most of the time. A crude camera-only controller written to test
+  the tools usually found its first balloon 4-8 s after arming and scored
+  0-200 over 8 runs (median 50), leaving a wide range above it for better
+  controllers. The
+  two red balloons (-75 each) make blind forward flight costly. A longer
+  limit would let a simple "turn and fly at everything" strategy approach
+  the maximum. (Design judgements, not measured optima.)
 * **End of run**: at the limit, scoring stops. Contacts at or after the
   limit never score, however quickly the simulator stops. The result is
   published, optionally written to `result_file`, and the world is paused
@@ -69,8 +90,10 @@ A Gazebo camera sensor on the vehicle (vehicle YAML `camera:`), modelling
 the Pluto WiFi Camera Module. From the supplier listing: 720p stream
 (1280×720) at about 18 FPS live over Wi-Fi, 8 g (added to the vehicle mass:
 68 g in flight). Estimated, because the listing does not give them: 80°
-horizontal field of view, mounted forward and facing ahead (3 cm ahead of
-and 1.5 cm above the centre of mass, no tilt), and the pixel noise. With
+horizontal field of view, mounted under the front of the body, facing
+ahead (3.5 cm ahead of and 1.8 cm below the centre of mass, no tilt; an
+earlier estimate on top of the body put the front prop guards in the image
+corners), and the pixel noise. With
 the camera fitted, the real drone routes control and telemetry through the
 camera's Wi-Fi. The simulator does not model that link's latency, the H.264
 compression, motion blur, rolling shutter, or the module's 3.4 V brown-out. Rendering works headless
@@ -89,7 +112,7 @@ balloon colours are visible in the camera images. Result on 2026-09-24:
 | 0.001 s | run clock started | 0 |
 | 6.91 s | POP yellow +25 | 25 |
 | 9.67 s | POP blue +50 | 75 |
-| 15.001 s | TIME UP, world paused | 75 (of 500 at the time; the best score is now 350, with red a −75 penalty) |
+| 15.001 s | TIME UP, world paused | 75 (the maximum was 500 then; with red now a −75 penalty it is 350) |
 
 The popped balloons' models were gone from the world afterwards. The
 camera ran at 18.0 Hz (1280×720). Arena logic unit tests: `pluto_x_core` `test_arena.cpp`.
@@ -118,7 +141,8 @@ solution to the challenge:** teams must find the balloons with the camera.
 The demo runs for **35 s** (`time_limit_s`; the arena config's competition
 limit stays 15 s). It visits the six non-red balloons
 (`demo/config/balloon_demo.yaml`) in the shortest order, 17.5 m in total, and
-every leg passes at least 1.08 m from both red balloons. Measured in
+every leg of the planned route passes at least 1.08 m from both red
+balloons (the flown path came within 1.05 m, below). Measured in
 Gazebo on 2026-09-24:
 
 | # | balloon | popped at (sim) | total |

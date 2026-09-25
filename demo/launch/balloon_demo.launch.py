@@ -10,7 +10,7 @@ demo/config/balloon_demo.yaml). Teams have neither: their controller must find
 the balloons in the camera image.
 
 The demo runs for 35 s (time_limit_s; the competition limit is 15 s), long
-enough to visit all eight balloons. Then the simulation pauses and the
+enough to visit the six non-red balloons. Then the simulation pauses and the
 scoreboard prints the result table in this terminal (and shows the final
 score in RViz). time_limit_s:=15 shows the competition-length run.
 
