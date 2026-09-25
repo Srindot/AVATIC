@@ -1,16 +1,23 @@
+# colcon build output (rebuild with: colcon build)
 build/
 install/
 log/
-# recorded simulation runs (large, per user)
+
+# recorded simulation runs and evaluation sessions (large, per user)
 analysis/runs/*
 !analysis/runs/.gitkeep
 evaluation/sessions/*
 !evaluation/sessions/.gitkeep
-# Python bytecode
+
+# Python
 __pycache__/
 *.pyc
-.ipynb_checkpoints/
 .pytest_cache/
+.ipynb_checkpoints/
+
+# Claude Code (local session files)
+.claude/
+
 # editors / OS
 .vscode/
 .idea/
@@ -18,4 +25,3 @@ __pycache__/
 *~
 .DS_Store
 Thumbs.db
-.claude/settings.local.json
