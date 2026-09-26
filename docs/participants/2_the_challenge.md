@@ -125,6 +125,6 @@ In short, all **required**:
    (perception, decision and red-balloon avoidance, control), results,
    analysis and at least two failure cases.
 
-The submission format and deadline will be announced by the organisers.
+The deadline is **September 30, 11:59 PM** (where to upload will be announced by the organisers). The shortlisted teams fly in the final on October 3, in the drone arena.
 
 **Next:** [3. Writing your controller](3_writing_your_controller.md)

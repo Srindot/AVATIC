@@ -3,11 +3,14 @@
 %
 % ---------------------------------------------------------------------------
 % EDIT HERE: dates and prizes (shown on several slides)
-\newcommand{\RoundOneOpens}{TBA}          % simulation round opens
-\newcommand{\RoundOneDeadline}{TBA}       % simulation submission deadline
-\newcommand{\ShortlistDate}{TBA}          % shortlist for the hardware round announced
-\newcommand{\RoundTwoDate}{TBA}           % hardware round (on site)
-\newcommand{\PrizePool}{To be announced}
+\newcommand{\RoundOneOpens}{Sep 27}       % simulation round opens (this workshop)
+\newcommand{\RoundOneDeadline}{Sep 30, 11:59 PM}  % simulation submission deadline
+\newcommand{\ShortlistDate}{Sep 30}       % shortlist for the hardware round announced
+\newcommand{\RoundTwoDate}{Oct 3}         % hardware round: final in the drone arena
+\newcommand{\PrizePool}{Prizes worth \faRupeeSign\,20,000}
+\newcommand{\RegistrationDeadline}{Sep 29, 11:59 PM}
+\newcommand{\RegistrationURL}{forms.gle/6x25JHhfRKqESipF8}
+\newcommand{\TeamSize}{2--4 members}
 \newcommand{\ContactName}{Srinath Bhamidipati}
 \newcommand{\ContactMail}{srinath.bhamidipati@research.iiit.ac.in}
 \newcommand{\RepoURL}{github.com/Srindot/AVATIC}
@@ -55,7 +58,7 @@
 \title[AVATIC]{AVATIC}
 \subtitle{Autonomous Vision-Based Aerial Target Interception Challenge}
 \author[INFINIUM '26]{INFINIUM '26 \quad\textbullet\quad Workshop}
-\institute[]{\RepoURL}
+\institute[]{DRONE ARENA @ Infinium\\[1mm]\RepoURL}
 \date{}
 
 \begin{document}
@@ -226,25 +229,22 @@
     \column{0.49\textwidth}
     \begin{block}{Round 1: Simulation}
       \small
-      Opens: \textbf{\RoundOneOpens} \quad Deadline: \textbf{\RoundOneDeadline}\\[1mm]
-      Submit \textbf{all} of:
-      \begin{enumerate}\small
+      Opens: \textbf{\RoundOneOpens} \quad Deadline: \textbf{\RoundOneDeadline}\\
+      Submit \textbf{all} of (in \code{output/}; see \code{DELIVERABLES.md}):
+      \begin{enumerate}\footnotesize
         \item your controller: \code{outerloop\_controller/}
-        \item the \textbf{analysis notebook} of your best run, executed
-        \item the \textbf{evaluation notebook}, executed ($\geq$5 runs)
-        \item a \textbf{video} of your best run (Gazebo + RViz):
-              pops, and the red balloons avoided
-        \item a \textbf{technical report} (PDF, $\leq$8 pages):
-              approach, results, analysis, failure cases
+        \item your best run + its \textbf{analysis notebook}, and an
+              \textbf{evaluation} ($\geq$5 runs) + its notebook
+        \item a \textbf{video} of your best run: pops, red balloons avoided
+        \item a \textbf{technical report} (PDF, $\leq$8 pages)
       \end{enumerate}
-      All in \code{output/}: \code{python3 output/collect.py};
-      details in \code{DELIVERABLES.md}.
+      \code{python3 output/collect.py} gathers 1--2.
       Judged on layouts \textbf{you have not seen}.
     \end{block}
     \column{0.49\textwidth}
     \begin{block}{Round 2: Hardware}
       \small
-      Shortlist: \textbf{\ShortlistDate} \quad Round: \textbf{\RoundTwoDate}\\[1mm]
+      Shortlist: \textbf{\ShortlistDate} \quad Final: \textbf{\RoundTwoDate}, drone arena\\[1mm]
       \begin{itemize}\small
         \item The top teams of Round 1 are invited.
         \item The \textbf{same program} flies the real Pluto X
@@ -624,13 +624,14 @@ python3 outerloop_controller/my_controller.py --hardware
   \centering
   \begin{tikzpicture}[
       ev/.style={circle,fill=avBlue,inner sep=2.5pt},
-      lab/.style={align=center,font=\small,text width=3.1cm}]
+      lab/.style={align=center,font=\small,text width=3.3cm}]
     \draw[very thick,avBlue,-{Latex[length=3mm]}] (0,0) -- (14,0);
     \foreach \x/\name/\date/\pos in {
-        1.2/Round 1 opens/\RoundOneOpens/above,
-        4.8/Simulation submission/\RoundOneDeadline/below,
-        8.6/Shortlist announced/\ShortlistDate/above,
-        12.2/Hardware round/\RoundTwoDate/below} {
+        1.0/Workshop/\RoundOneOpens/above,
+        3.9/Registration closes/\RegistrationDeadline/below,
+        6.8/Simulation submission/\RoundOneDeadline/above,
+        9.7/Shortlist/\ShortlistDate/below,
+        12.6/Final: drone arena/\RoundTwoDate/above} {
       \node[ev] at (\x,0) {};
       \node[lab,\pos=3mm] at (\x,0) {\textbf{\name}\\ \date};
     }
@@ -647,8 +648,10 @@ python3 outerloop_controller/my_controller.py --hardware
   \centering
   \vspace{8mm}
   {\Huge \faTrophy}\\[6mm]
-  {\LARGE Prize pool: \textbf{\PrizePool}}\\[8mm]
-  \small Details will be announced before the simulation deadline.
+  {\LARGE \textbf{\PrizePool}}\\[8mm]
+  \small Team size: \TeamSize.\quad
+  Register by \textbf{\RegistrationDeadline}: \url{https://\RegistrationURL}\\[2mm]
+  More Infinium events: \url{https://felicity.iiit.ac.in/infinium/events}
 \end{frame}
 
 % ===========================================================================

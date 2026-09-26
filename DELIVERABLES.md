@@ -2,8 +2,9 @@
 
 Everything goes in the **`output/`** folder of this repository. Most of it is
 collected for you by one command; you add the **video** and the **report**.
-The submission format (where to upload, file size limits) and the deadline
-will be announced by the organisers.
+**Deadline: September 30, 11:59 PM** (where to upload will be announced
+by the organisers). The shortlisted teams fly in the final in the drone
+arena on October 3.
 
 ## Checklist
 
@@ -92,8 +93,8 @@ named `report.pdf`. Explain what you built, show how well it works and be
 honest about where it fails: a clear account of a weak controller is worth
 more than a vague account of a strong one. Use these sections:
 
-1. **Team.** Names, institute, programme (B.Tech., M.Tech., M.S., Ph.D.)
-   and one contact e-mail.
+1. **Team.** Team name; the names (2–4 members), institute and programme
+   (B.Tech., M.Tech., M.S., Ph.D.) of each member; one contact e-mail.
 2. **Approach.** An overview: one diagram from the camera image to the
    `Command`, and the main idea in a few sentences.
 3. **Perception.** How you find balloons in the image: colour thresholds

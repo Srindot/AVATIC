@@ -15,6 +15,17 @@ and score your algorithm.
 
 ## The competition
 
+| | |
+|---|---|
+| **Event** | **DRONE ARENA @ Infinium**: code your way through an aerial obstacle course, first in the simulator, then with real drones in the arena |
+| **Prizes** | worth **₹20,000** |
+| **Team size** | 2–4 members |
+| **Register** | [forms.gle/6x25JHhfRKqESipF8](https://forms.gle/6x25JHhfRKqESipF8), by **September 29, 11:59 PM** |
+| **September 27, 9:30 PM, H104** | pre-workshop and simulator access |
+| **September 30, 11:59 PM** | simulation round submission deadline; then shortlisting |
+| **October 3** | final: the shortlisted teams fly real drones in the drone arena |
+| **More events** | [felicity.iiit.ac.in/infinium/events](https://felicity.iiit.ac.in/infinium/events) |
+
 **The goal:** write a program that flies a **Pluto X** drone into balloons
 using **only the drone's camera**. Your program runs on **your laptop**. It
 receives the video from the drone, decides how to fly, and sends flight
@@ -611,7 +622,7 @@ In short, all **required**:
    (perception, decision and red-balloon avoidance, control), results,
    analysis and at least two failure cases.
 
-The submission format and deadline will be announced by the organisers.
+The deadline is **September 30, 11:59 PM** (where to upload will be announced by the organisers).
 
 ## Questions?
 
