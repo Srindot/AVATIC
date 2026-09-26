@@ -148,15 +148,20 @@ def _setup(context):
     layout = os.path.join(run_dir, 'layout.yaml')
     generator = os.path.join(get_package_prefix('pluto_x_gazebo'), 'lib', 'pluto_x_gazebo',
                              'generate_arena.py')
+    base = os.path.join(gazebo, 'config', 'arena_default.yaml')
+    with open(base, encoding='utf-8') as stream:
+        rules = yaml.safe_load(stream)['competition']       # the official rules
+    counts = [f'{colour}={n}' for colour, n in rules['balloon_counts'].items()]
     result = subprocess.run(
-        [sys.executable, generator, '--seed', str(seed), '--base',
-         os.path.join(gazebo, 'config', 'arena_default.yaml'), '--out', layout],
+        [sys.executable, generator, '--seed', str(seed), '--base', base, '--out', layout]
+        + [arg for c in counts for arg in ('--count', c)],
         capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f'arena generation failed: {result.stderr.strip()}')
     with open(layout, encoding='utf-8') as stream:
         arena = yaml.safe_load(stream)
-    arena['time_limit_s'] = float(LaunchConfiguration('time_limit_s').perform(context))
+    time_limit = LaunchConfiguration('time_limit_s').perform(context)
+    arena['time_limit_s'] = float(time_limit) if time_limit else float(rules['time_limit_s'])
     if not 0.0 < arena['time_limit_s'] < 3600.0:   # also rejects nan
         raise RuntimeError(f"time_limit_s must be in (0, 3600) s, got {arena['time_limit_s']}")
     arena['clock_start'] = 'armed'          # the 15 s start when the controller arms
@@ -212,7 +217,9 @@ def generate_launch_description():
         DeclareLaunchArgument('msp_bridge', default_value='false'),
         DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('rviz', default_value='true'),
-        DeclareLaunchArgument('time_limit_s', default_value='15'),
+        DeclareLaunchArgument('time_limit_s', default_value='',
+                              description='override the official time limit (runs are then '
+                                          'flagged as not official)'),
         DeclareLaunchArgument('result_file', default_value=''),
         OpaqueFunction(function=_check_controller),
         OpaqueFunction(function=_setup),

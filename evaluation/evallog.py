@@ -125,13 +125,32 @@ def objective(session: Session) -> dict:
            'runs_with_red_hit': sum(1 for r in rows if (r.get('red_popped') or 0) > 0),
            'runs_scoring_zero_or_less': int(np.sum(scores <= 0)) if len(scores) else 0,
            'controller_errors': sum(r.get('controller_error') or 0 for r in session.rows),
+           # rows from before the check existed have no 'official_rules': unknown
+           'not_official': sum(1 for r in session.rows if r.get('official_rules') == 0),
+           'official_unknown': sum(1 for r in session.rows if r.get('official_rules') is None
+                                   and r.get('status') == 'complete'),
            'colours': {}}
     for colour in COLOURS:
         popped = sum(r.get(f'{colour}_popped') or 0 for r in rows)
-        # per-run totals from each layout (older sessions: 2 per colour)
+        # per-run totals from each layout (sessions from before this was recorded: 2 per colour)
         available = sum(r.get(f'{colour}_total', 2) or 0 for r in rows)
         out['colours'][colour] = {'popped': popped, 'available': available}
     return out
+
+
+def _rules_md(o: dict) -> str:
+    rules = runlog.official_rules()
+    counts = rules.get('balloon_counts', {})
+    desc = (f"{rules.get('time_limit_s', '?')} s from arming, {sum(counts.values())} balloons "
+            f"(green {counts.get('green', '?')}, blue {counts.get('blue', '?')}, "
+            f"yellow {counts.get('yellow', '?')}, red {counts.get('red', '?')})")
+    if o['not_official']:
+        return (f"> **NOT AN OFFICIAL EVALUATION:** {o['not_official']} run(s) used other rules "
+                f"than the official ones ({desc}). Results with changed rules are not "
+                'comparable and do not count.')
+    if o['official_unknown']:
+        return f'**Rules:** official rules: {desc} (not recorded for {o["official_unknown"]} older run(s)).'
+    return f'**Rules:** every run used the official competition rules: {desc}.'
 
 
 def show_objective(session: Session) -> None:
@@ -146,6 +165,7 @@ def show_objective(session: Session) -> None:
           + (f" (**{o['never_armed']} never armed**, counted as 0)" if o['never_armed'] else ''),
           f"controller `{os.path.basename(session.meta.get('controller', '?'))}` "
           f"(sha256 {str(session.meta.get('controller_sha256', '?'))[:12]})", '',
+          _rules_md(o), '',
           '| | |', '|---|---|',
           f"| min / median / max | {fmt(o['min_score'])} / {fmt(o['median_score'])} / {fmt(o['max_score'])} |",
           f"| mean over completed runs only | {fmt(o['mean_score'])} |",
@@ -155,7 +175,8 @@ def show_objective(session: Session) -> None:
           f"| controller errors (step() raised) | {o['controller_errors']} |", '',
           '| balloon | popped (all runs) | hit rate |', '|---|---|---|']
     md += [f"| {c} | {v['popped']} / {v['available']} | {rate(v)} |" for c, v in o['colours'].items()]
-    text = [f"MEAN SCORE {fmt(o['mean_score_all'])} / {fmt(o['best_possible_per_run'])} per run "
+    text = [_rules_md(o).replace('**', '').lstrip('> '),
+            f"MEAN SCORE {fmt(o['mean_score_all'])} / {fmt(o['best_possible_per_run'])} per run "
             f"({o['completed']}/{o['runs']} runs completed, {o['failed']} failed)",
             f"  min {fmt(o['min_score'])}  median {fmt(o['median_score'])}  max {fmt(o['max_score'])}"
             f"  std {fmt(o['std_score'])}",
@@ -207,7 +228,8 @@ def plot_scores(session: Session):
     ax1.legend(loc='upper right', fontsize=8)
     s = session.scores()
     if len(s):
-        bins = np.arange(min(-75, s.min()) - 12.5, max(350, s.max()) + 25, 25)
+        top = o['best_possible_per_run'] or s.max()
+        bins = np.arange(min(-75, s.min()) - 12.5, max(top, s.max()) + 25, 25)
         ax2.hist(s, bins=bins, color='tab:blue', edgecolor='white')
     ax2.set_xlabel('score')
     ax2.set_ylabel('runs')

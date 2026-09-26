@@ -5,6 +5,13 @@ INFINIUM '26**. It has everything a team needs to take part: a simulator of
 the Pluto X drone, a ready-to-fill controller template, and tools to test
 and score your algorithm.
 
+> **In-depth manual:** step-by-step setup for
+> [Ubuntu](workshop/manual/setup_ubuntu.md),
+> [Windows](workshop/manual/setup_windows.md) and
+> [macOS](workshop/manual/setup_macos.md), and how to use everything
+> (every command and option): **[workshop/manual.md](workshop/manual.md)**.
+> The workshop slides are in [workshop/presentation.pdf](workshop/presentation.pdf).
+
 ## The competition
 
 **The goal:** write a program that flies a **Pluto X** drone into balloons
@@ -17,8 +24,11 @@ commands back to the drone. Pop as many good balloons as you can in
 |---|---|---|---|---|
 | Points | **+100** | **+50** | **+25** | **−75** (avoid) |
 
-There are 8 balloons (2 of each colour), so the best possible score is
-**350**.
+There are **12 balloons**: 2 green, 3 blue, 4 yellow and 3 red (the
+high-value ones are the rarest), so the best possible score is **450**.
+Where each balloon floats, and which one has which colour, changes with
+every layout. There are more good balloons than anyone can pop in 15 s,
+so you never run out.
 
 The competition has **two rounds**:
 
@@ -232,6 +242,12 @@ delay and the lighting.
 
 ## Setup and installation
 
+> **Step-by-step for your computer:** [workshop/manual.md](workshop/manual.md) has a separate,
+> detailed page for [Ubuntu](workshop/manual/setup_ubuntu.md),
+> [Windows](workshop/manual/setup_windows.md) and [macOS](workshop/manual/setup_macos.md), and
+> a [usage page](workshop/manual/usage.md) with every command and option. The
+> summary below covers the same steps.
+
 First clone the repository (with `--recursive`):
 
 ```bash
@@ -435,8 +451,8 @@ If you see `Package '...' not found`, run these two lines again.
 ros2 launch pluto_x_demo balloon_demo.launch.py
 ```
 
-The drone flies a pre-planned route and pops all six good balloons (score
-350). It knows where the balloons are, which your controller does not, and
+The drone flies a pre-planned route and pops all six good balloons of its
+own fixed 8-balloon layout (score 350 there). It knows where the balloons are, which your controller does not, and
 it is given 35 s on a fixed layout instead of 15 s: it only shows you what
 the arena looks like, it is not a benchmark.
 

@@ -34,7 +34,7 @@ cell.
 
 | Section | What you learn |
 |---|---|
-| **Headline** | your **average score out of 350** (runs where your controller never armed count as 0, as in judging), the lowest, middle and highest scores, red balloons hit, failed runs |
+| **Headline** | your **average score out of 450** (runs where your controller never armed count as 0, as in judging), the lowest, middle and highest scores, red balloons hit, failed runs |
 | **Score per run** | one bar per layout, and how the scores are spread |
 | **Balloons per colour** | how often you popped each colour, over all runs |
 | **Time to the first pop** | how fast your controller finds a balloon |

@@ -5,8 +5,9 @@ flown the drone in the simulator.
 
 ## Install
 
-Follow **[Setup and installation](../../README.md#setup-and-installation)**
-in the main README. There are two ways:
+Follow the page for your computer in the **[manual](../../workshop/manual.md)**
+([Ubuntu](../../workshop/manual/setup_ubuntu.md), [Windows](../../workshop/manual/setup_windows.md),
+[macOS](../../workshop/manual/setup_macos.md)). There are two ways:
 
 - **Option 1, local:** Ubuntu 22.04 (native, or WSL2 on Windows). You
   install ROS 2 Humble and Gazebo Harmonic yourself. This is the harder way.

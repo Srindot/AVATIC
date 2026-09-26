@@ -83,7 +83,7 @@ each, no windows), and prints the average score. Then open the report:
 jupyter notebook evaluation/evaluation.ipynb
 ```
 
-It starts with your **average score out of 350**, your worst and best runs,
+It starts with your **average score out of 450**, your worst and best runs,
 how many red balloons you hit, and how often you popped each colour. Then
 it shows every run, and maps of your best and worst flights.
 

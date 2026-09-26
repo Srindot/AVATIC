@@ -5,6 +5,16 @@
 # Balloons are upright and visual-only (no collision): a balloon pops the
 # first time the vehicle's contact sphere touches its surface.
 
+# OFFICIAL COMPETITION RULES. competition.launch.py generates every
+# competition layout with these counts (positions and which balloon has
+# which colour are random, from the seed) and this time limit; the analysis
+# and evaluation notebooks show them and flag any run that differs.
+competition:
+  time_limit_s: 15.0                 # from arming
+  balloon_counts: {green: 2, blue: 3, yellow: 4, red: 3}
+
+# The settings below are for arena.launch.py and the demo (the fixed
+# layout at the end of this file).
 time_limit_s: 15.0
 # When the run clock starts:
 #   sim_start  at simulation time 0 (the firmware's ~4 s start-up and the
@@ -48,7 +58,8 @@ colors:
 
 # Two of each colour, spread around the take-off point at different
 # distances, bearings and heights. Red balloons are PENALTIES (-75): they
-# are obstacles to avoid. Best achievable score: 350. Higher-value
+# are obstacles to avoid. Best achievable score in THIS demo layout: 350
+# (competition layouts use the counts in `competition:` above). Higher-value
 # balloons are farther and
 # higher. Several are behind the start heading, so a yaw scan is needed.
 balloons:

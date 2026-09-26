@@ -45,8 +45,9 @@ def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 15)
 | Balloon | green | blue | yellow | red |
 |---|---|---|---|---|
 | Points | +100 | +50 | +25 | **−75** |
+| How many | 2 | 3 | 4 | 3 |
 
-15 s from arming. The best possible score is 350.
+15 s from arming. The best possible score is 450.
 
 **Remember:** keep the throttle smooth and above about 0.5 in the air,
 don't use `altitude_hold`, and keep your files in this folder.

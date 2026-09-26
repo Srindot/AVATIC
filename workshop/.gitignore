@@ -1,0 +1,11 @@
+# LaTeX build files (rebuild: latexmk -pdf presentation.tex)
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz

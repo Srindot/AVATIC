@@ -15,8 +15,10 @@ Status 2026-09-25. Launches: `competition.launch.py` (participant runs: seeded r
 | RViz: camera image + ground-truth odometry | `pluto_x_bringup/rviz/arena.rviz` |
 
 Points: **green 100, blue 50, yellow 25, and red −75 (a penalty)**. Red
-balloons are obstacles: popping one subtracts 75 points. The default
-layout has two of each colour; the best achievable score is **350**
+balloons are obstacles: popping one subtracts 75 points. Competition
+layouts have 12 balloons (green 2, blue 3, yellow 4, red 3; best 450; see
+"Competition rules" below). The default (demo) layout here has two of each
+colour; its best achievable score is **350**
 (everything except red). In this default (demo) layout the balloons are
 1.6–4.0 m from the take-off point horizontally and 0.9–1.9 m high.
 Higher-value balloons are farther away and higher, and several are behind
@@ -50,9 +52,25 @@ and the per-colour counts from this file.
   sets it): a participant gets the full 15 s of flight whatever the
   firmware start-up time, as on the real drone, where the run starts when
   the drone arms.
-* **Why 15 s and 8 balloons** (2 per colour; best score 350, reviewed
-  2026-09-25): in competition layouts (generate_arena.py) every balloon is
-  within 3.5 m of the take-off point and at most 2.0 m from a neighbour.
+* **Competition rules: 15 s and 12 balloons** (green 2, blue 3, yellow 4,
+  red 3; best score 450; set in the `competition:` block of
+  arena_default.yaml, decided 2026-09-26). Every competition layout has
+  this composition (so every layout offers the same 450 points); where the
+  balloons float and which one has which colour come from the seed. The
+  analysis and evaluation notebooks show these rules and flag any run with
+  other settings as not official. Why: with 8 balloons (6 good) a strong
+  controller could pop every good balloon before the end; with 9 good
+  balloons nobody runs out (8 test runs of a camera-only controller popped
+  0-3 in 15 s and left at least 6 good ones; a very good controller at one
+  pop every ~2 s after the first search reaches about 6). High-value
+  balloons are the rarest, and red stays about a quarter of the balloons.
+  20 s did not reliably raise the scores in the same test (run-to-run
+  noise was larger) and would let top controllers approach running out
+  again, so 15 s stays. 40 of 40 test layouts generated with the same
+  spacing rules.
+* **Earlier reasoning for 15 s and 8 balloons** (2 per colour, 350,
+  2026-09-25): every balloon is within 3.5 m of the take-off point and at
+  most 2.0 m from a neighbour.
   The shortest horizontal route from take-off through all six scoring
   balloons is 5.2-11.8 m, median 8.4 m (computed over seeds 1-200), so
   350 in 15 s needs only ~0.6 m/s on average, but a controller must also

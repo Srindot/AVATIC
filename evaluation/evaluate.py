@@ -165,6 +165,9 @@ def _fill_row(row, run_dir):
     row['controller_error'] = int(_controller_raised(run_dir))
     run = runlog.load_run(os.path.basename(run_dir), root=os.path.dirname(run_dir))
     row['armed'] = int(run.arm_time_s is not None)
+    check = runlog.rules_check(run)
+    row['time_limit_s'] = check['time_limit_s']
+    row['official_rules'] = int(check['official'])
     ready = run.telemetry.get('ready_to_arm')
     row['ready'] = int(ready is not None and bool((ready > 0.5).any()))
     s = runlog.summary(run)

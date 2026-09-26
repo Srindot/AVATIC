@@ -201,6 +201,50 @@ def summary(run: Run) -> dict:
 
 
 BALLOON_COLOURS = ('green', 'blue', 'yellow', 'red')
+RULES_FILE = os.path.join(os.path.dirname(HERE), 'simulation_engine', 'pluto_x_gazebo',
+                          'config', 'arena_default.yaml')
+
+
+def official_rules() -> dict:
+    """The official competition rules: {'time_limit_s', 'balloon_counts'}."""
+    data = _load_yaml(RULES_FILE) or {}
+    return data.get('competition', {})
+
+
+def rules_check(run: Run) -> dict:
+    """Did this run use the official competition rules (time limit and
+    balloons per colour)? {'official': bool, 'time_limit_s', 'counts',
+    'rules', 'problems': [text]}."""
+    rules = official_rules()
+    layout = run.extra.get('layout', {})
+    limit = layout.get('time_limit_s', run.meta.get('time_limit_s'))
+    counts = {c: sum(1 for b in run.balloons if b['colour'] == c) for c in BALLOON_COLOURS}
+    problems = []
+    if not rules:
+        problems.append(f'official rules not found ({RULES_FILE})')
+    else:
+        if limit is None or abs(float(limit) - float(rules['time_limit_s'])) > 1e-6:
+            problems.append(f"time limit {limit} s (official: {rules['time_limit_s']:g} s)")
+        official_counts = {c: int(rules['balloon_counts'].get(c, 0)) for c in BALLOON_COLOURS}
+        if counts != official_counts:
+            problems.append('balloons ' + ', '.join(f'{c} {counts[c]}' for c in BALLOON_COLOURS)
+                            + ' (official: ' + ', '.join(f'{c} {official_counts[c]}'
+                                                         for c in BALLOON_COLOURS) + ')')
+    return {'official': not problems, 'time_limit_s': limit, 'counts': counts,
+            'rules': rules, 'problems': problems}
+
+
+def _rules_lines(check: dict):
+    """(markdown line, text line) describing the rules of a run."""
+    counts = check['counts']
+    desc = (f"{check['time_limit_s']} s from arming, {sum(counts.values())} balloons "
+            f"(green {counts['green']}, blue {counts['blue']}, yellow {counts['yellow']}, "
+            f"red {counts['red']})")
+    if check['official']:
+        return f'**Rules:** {desc}: the official competition rules.', f'rules: {desc} (official)'
+    return (f"> **NOT AN OFFICIAL RUN:** {'; '.join(check['problems'])}. Results with "
+            'changed rules are not comparable and do not count.',
+            f"NOT AN OFFICIAL RUN: {'; '.join(check['problems'])}")
 
 
 def objective(run: Run) -> dict:
@@ -250,14 +294,15 @@ def show_objective(run: Run) -> None:
     for colour, c in o['colours'].items():
         each = '' if c['points_each'] is None else f"{c['points_each']:+d}"
         rows.append((colour, each, f"{c['popped']} / {c['total']}", f"{c['points']:+d}"))
-    md = [f"## Score: **{score}** / {best}{warn}", '',
-          f"run `{run.run_id}`, seed {o['seed']}, {o['time_limit_s']} s from arming", '',
+    rules_md, rules_text = _rules_lines(rules_check(run))
+    md = [f"## Score: **{score}** / {best}{warn}", '', rules_md, '',
+          f"run `{run.run_id}`, seed {o['seed']}", '',
           '| balloon | points each | popped | points |', '|---|---|---|---|']
     md += [f'| {c} | {e} | {p} | {pts} |' for c, e, p, pts in rows]
     md += ['', f"**Red balloons hit: {o['red_hits']}**" + ('' if o['red_hits'] else ' (good)'),
            f"pops at {o['pop_times_after_arm_s']} s after arming" if o['pop_times_after_arm_s']
            else 'no balloon popped']
-    text = [f"SCORE {score} / {best}{warn}", f"run {run.run_id}, seed {o['seed']}"]
+    text = [f"SCORE {score} / {best}{warn}", rules_text, f"run {run.run_id}, seed {o['seed']}"]
     text += [f'  {c:<7}{e:>5}  popped {p:<6} {pts:>5}' for c, e, p, pts in rows]
     text += [f"  red hits: {o['red_hits']}", f"  pop times after arming: {o['pop_times_after_arm_s']}"]
     _show('\n'.join(md), '\n'.join(text))
