@@ -28,10 +28,15 @@ To look at an older run, write its folder name in the first cell:
 |---|---|
 | **Score** | your points, and which balloons of each colour you popped |
 | **Summary** | time to the first pop, highest point, fastest speed, largest tilt, distance flown |
-| **Map from above** | your flight path over the balloons (× = a pop), the height over time, the distance to every balloon over time |
-| **Attitude** | the tilt the flight controller reported, against the truth |
-| **Commands** | the roll, pitch, yaw rate and throttle your controller sent, over time |
-| **Camera** | what your drone saw after arming, just before each pop, and at the end |
+| **Map from above** | your flight path over the balloons (× = a pop, a dot every 5 s), the height over time, the distance to the nearest balloon of each colour |
+| **What the camera could see** | for every balloon, when it was in the camera's view and how big it looked: good balloons in view but never chased are missed chances |
+| **Commands** | the roll, pitch, yaw rate and throttle your controller sent, over time, with the safety caps |
+| **Camera** | what your drone saw 2 s after arming, just before each pop, and at the end |
+| **Diagnostics** | the tilt and heading the flight controller reported, against the truth |
+
+The first lines also say whether the run used the official rules, and the
+**fair-play** check of your running controller (page 2 of the guide, "What
+you can and cannot use").
 
 The map uses the drone's **true** position from the simulator. Your
 controller never gets it (the real drone can't provide it), but it shows
@@ -53,13 +58,9 @@ see whether a change helped:
 
 ## For your submission
 
-Run the notebook **on your best run** (set `RUN` to that folder), save it
-with all outputs visible (*File → Save*), and include it in your
-submission. From a terminal:
-
-```bash
-jupyter nbconvert --to notebook --execute --inplace analysis/analysis.ipynb
-```
+`python3 output/collect.py` copies your best run into `output/` and runs
+the notebook on it (`--run <folder>` for another run). See
+[DELIVERABLES.md](../DELIVERABLES.md).
 
 ## What is saved in a run folder
 

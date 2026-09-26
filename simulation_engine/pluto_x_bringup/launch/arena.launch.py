@@ -27,7 +27,9 @@ Examples:
   ros2 launch pluto_x_bringup arena.launch.py controller:=/path/mine.py:Mine
 """
 
+import atexit
 import os
+import shutil
 import tempfile
 
 import xacro
@@ -38,6 +40,13 @@ from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
+
+def _temp_dir(prefix):
+    """A temporary directory, removed when the launch ends."""
+    path = tempfile.mkdtemp(prefix=prefix)
+    atexit.register(shutil.rmtree, path, ignore_errors=True)
+    return path
 
 PASS_THROUGH = ['flight_controller', 'config_file', 'headless', 'paused',
                 'spawn_yaw', 'outer_loop', 'controller',
@@ -62,7 +71,7 @@ def _launch_setup(context):
         # random layout from the seed (rules from arena_config)
         import subprocess
         import sys
-        generated = os.path.join(tempfile.mkdtemp(prefix='pluto_arena_gen_'), 'arena.yaml')
+        generated = os.path.join(_temp_dir('pluto_arena_gen_'), 'arena.yaml')
         generator = os.path.join(get_package_prefix('pluto_x_gazebo'), 'lib',
                                  'pluto_x_gazebo', 'generate_arena.py')
         result = subprocess.run([sys.executable, generator, '--seed', seed,
@@ -87,7 +96,7 @@ def _launch_setup(context):
                 raise RuntimeError('time_limit_s must be > 0')
         if clock_start:
             arena['clock_start'] = clock_start
-        arena_config = os.path.join(tempfile.mkdtemp(prefix='pluto_arena_cfg_'),
+        arena_config = os.path.join(_temp_dir('pluto_arena_cfg_'),
                                     'arena.yaml')
         with open(arena_config, 'w', encoding='utf-8') as stream:
             yaml.safe_dump(arena, stream, sort_keys=False)
@@ -101,7 +110,7 @@ def _launch_setup(context):
     world_sdf = xacro.process_file(
         _share('pluto_x_gazebo', 'worlds', 'balloon_arena.sdf.xacro'),
         mappings=mappings).toxml()
-    world_file = os.path.join(tempfile.mkdtemp(prefix='pluto_arena_'),
+    world_file = os.path.join(_temp_dir('pluto_arena_'),
                               'balloon_arena.sdf')
     with open(world_file, 'w', encoding='utf-8') as stream:
         stream.write(world_sdf)

@@ -21,7 +21,7 @@
 
 - It looks **straight ahead** (not tilted down), from under the nose of the
   drone: 3.5 cm in front of the centre, 1.8 cm below it.
-- Picture: **1280 × 720** pixels, about **17–18 per second**. Field of view:
+- Picture: **1280 × 720** pixels, about **18 per second**. Field of view:
   about **80° wide and 50° high**.
 - The camera is fixed to the drone, so **it tilts with the drone.** When you
   pitch forward (nose down), everything in the picture moves **up**; when

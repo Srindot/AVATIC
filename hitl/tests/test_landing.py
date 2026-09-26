@@ -57,7 +57,7 @@ class World:
         return Telemetry(time_s=self.now, armed=self.drone._arm_switch and not self.drone._estop,
                          ready_to_arm=False, roll_deg=0.0, pitch_deg=0.0, heading_deg=0.0,
                          altitude_m=self.z + self.rng.gauss(0.0, self.noise),
-                         battery_v=3.9, altitude_hold=False)
+                         battery_v=3.9)
 
 
 def make_drone(monkeypatch, z, hover_estimate, true_hover, last_throttle, noise=0.0):

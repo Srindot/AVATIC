@@ -61,7 +61,6 @@ Several differ from generic MultiWii/Cleanflight documentation:
 | `MSP_ATTITUDE` 108 | roll, pitch in decidegrees (firmware pitch + = nose down; reported to the controller as + = nose up, as in the simulator), heading in degrees |
 | `MSP_ALTITUDE` 109 | i32 estimated altitude in cm, i16 vario |
 | `MSP_ANALOG` 110 | u16 battery **mV**, current, mAh drawn and remaining, u8 state of charge, u8 warning |
-| `MSP_BOXIDS` 119 | active mode ids; used to find the BARO (altitude hold) bit |
 | `MSP_SET_COMMAND` 217 | **u16**, 2 = land |
 
 The firmware reads `MSP_SET_COMMAND` as two bytes (`read16`). The
@@ -76,8 +75,7 @@ buffer bytes. Our client sends two.
   62°/s), throttle ≤ 0.95. Larger values are clipped, with one warning per
   axis.
 - **Altitude ceiling 2.5 m** (baro, both backends): above it the throttle
-  is limited to 0.9 × the hover estimate (the estimate itself at most 0.8;
-  0.4 in altitude hold), so the drone descends. It relies on the
+  is limited to 0.9 × the hover estimate (the estimate itself at most 0.8), so the drone descends. It relies on the
   firmware's altitude estimate, which the firmware re-zeroes in
   near-free-fall (a hard throttle cut in flight; docs/architecture.md,
   firmware finding 5): after that the ceiling is offset by the height at
@@ -105,8 +103,7 @@ buffer bytes. Our client sends two.
   (emergency stop). The drone falls.
 - **No `send_command()` for 0.5 s:** level sticks and, if the drone was
   flying (last throttle > 0.3, or baro altitude > 0.3 m), the estimated
-  hover throttle (bounded to 0.6-0.85); otherwise throttle 0; if it was in
-  altitude hold, altitude hold (the same failsafe as the simulator). A
+  hover throttle (bounded to 0.6-0.85); otherwise throttle 0 (the same failsafe as the simulator). A
   flying drone may slowly sink.
 - **Telemetry stops for 1 s:** a warning is printed (Wi-Fi problem); after
   2 s, or if the socket fails, `running()` returns False so the control

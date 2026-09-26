@@ -1,6 +1,6 @@
 # Balloon arena: balloons, popping, score, time limit, camera
 
-Status 2026-09-25. Launches: `competition.launch.py` (participant runs: seeded random layouts, clock from arming) and `arena.launch.py` (the fixed default layout below, developer checks).
+Status 2026-09-27. Launches: `competition.launch.py` (participant runs: seeded random layouts, clock from arming) and `arena.launch.py` (the fixed default layout below, developer checks).
 
 ## What it is
 
@@ -66,12 +66,14 @@ and the per-colour counts from this file.
   the same spacing rules (mean nearest-balloon spacing 0.83 m). Cost:
   evaluation runs take about 40 s each, and the hardware round needs 18
   balloons per layout.
-* **Previous rules: 15 s and 12 balloons** (green 2, blue 3, yellow 4,
-  red 3; best score 450; 2026-09-26, same day). Every competition layout has
-  this composition (so every layout offers the same 450 points); where the
-  balloons float and which one has which colour come from the seed. The
-  analysis and evaluation notebooks show these rules and flag any run with
-  other settings as not official. Why: with 8 balloons (6 good) a strong
+* **Every competition layout has the official composition** (so every
+  layout offers the same 700 points); where the balloons float and which
+  one has which colour come from the seed. The analysis and evaluation
+  notebooks show the rules and flag any run with other settings as not
+  official.
+* **Previous rules (replaced by the above): 15 s and 12 balloons** (green
+  2, blue 3, yellow 4, red 3; best score 450; 2026-09-26, same day). Why
+  they were chosen then: with 8 balloons (6 good) a strong
   controller could pop every good balloon before the end; with 9 good
   balloons nobody runs out (8 test runs of a camera-only controller popped
   0-3 in 15 s and left at least 6 good ones; a very good controller at one
@@ -79,7 +81,7 @@ and the per-colour counts from this file.
   balloons are the rarest, and red stays about a quarter of the balloons.
   20 s did not reliably raise the scores in the same test (run-to-run
   noise was larger) and would let top controllers approach running out
-  again, so 15 s stays. 40 of 40 test layouts generated with the same
+  again, so 15 s stayed (until the 25 s / 18-balloon rules above). 40 of 40 test layouts generated with the same
   spacing rules.
 * **Earlier reasoning for 15 s and 8 balloons** (2 per colour, 350,
   2026-09-25): every balloon is within 3.5 m of the take-off point and at
@@ -113,7 +115,9 @@ and the per-colour counts from this file.
 | `/arena/result` | std_msgs/String | final YAML: score, max, per-balloon popped |
 
 Balloon positions are not published; finding them is the task. In the
-simulator, `/sim/pluto/odometry` still gives ground truth for development.
+simulator, `/sim/pluto/odometry` gives ground truth to the organisers' tools
+(recorder, scoreboard); a controller that reads it is flagged by the
+fair-play check (guide page 2, `integrity_monitor.py`).
 
 ## Camera
 
@@ -203,8 +207,8 @@ file) and pass the file with `route_file:=`.
 
 ## Limitations
 
-* The vehicle's contact shape is a sphere, not the real frame, propeller
-  and guard geometry.
+* The vehicle's contact shape is six spheres (four guards, the body, the
+  camera), not the real frame, propeller and guard geometry.
 * Balloons are fixed in place: no drift, bobbing, strings or popping
   debris.
 * One vehicle per arena.

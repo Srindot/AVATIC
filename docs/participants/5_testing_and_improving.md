@@ -47,12 +47,18 @@ What you see, top to bottom:
 2. **Summary**: time to the first pop, highest point, fastest speed,
    largest tilt, distance flown.
 3. **Map from above**: your flight path over the balloons (an × marks each
-   pop), the height over time, and the distance to every balloon over time.
-   Did you get close to the one you wanted? Did you pass near a red one?
-4. **Attitude**: what the flight controller reported against the truth.
-5. **Your commands**: what your controller sent, over time.
-6. **The camera**: what your controller saw after arming, just before each
-   pop, and at the end.
+   pop, a dot every 5 s), the height over time, and the distance to the
+   nearest balloon of each colour. Did you get close to the one you wanted?
+   Did you pass near a red one?
+4. **What the camera could see**: for every balloon, when it was in view
+   and how big it looked. A good balloon in view for seconds that your
+   controller never chased is a missed chance.
+5. **Your commands**: what your controller sent, over time, with the
+   safety caps (a flat line on a cap means it was clipped).
+6. **The camera**: what your controller saw 2 s after arming, just
+   before each pop, and at the end.
+7. **Diagnostics**: the tilt and heading the flight controller reported,
+   against the truth.
 
 The map shows the drone's **true** position. Your controller never gets
 it, but it shows you what really happened.
@@ -73,10 +79,10 @@ When your controller works on the development layout, check that it also
 works on layouts it has never seen. This is how judging works:
 
 ```bash
-python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
+python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 5
 ```
 
-It runs 10 flights on 10 random layouts, one after another (about 40 s
+It runs 5 flights on 5 random layouts, one after another (about 40 s
 each, no windows), and prints the average score. Then open the report:
 
 ```bash
@@ -85,7 +91,10 @@ jupyter notebook evaluation/evaluation.ipynb
 
 It starts with your **average score out of 700**, your worst and best runs,
 how many red balloons you hit, and how often you popped each colour. Then
-it shows every run, and maps of your best and worst flights.
+the points of every run split by colour, the score during the run (how
+fast points come, and whether they stop coming), a table of every run,
+maps of your best and worst flights, and what the camera saw in the worst
+one.
 
 - Ctrl-C stops early; the runs done so far are kept.
 - `--seeds 5,17,301` repeats specific layouts (for example your worst one).
@@ -94,24 +103,17 @@ it shows every run, and maps of your best and worst flights.
 - Close other simulations first: they slow the computer down and can
   change your results.
 
-## Save the notebooks for your submission
+## Collect your submission
 
-Your submission needs both notebooks **executed**, with all their outputs
-visible:
-
-1. **Analysis:** set `RUN` in the first cell to your **best** run, then
-   run all cells, then save.
-2. **Evaluation:** evaluate your **final** controller (at least 10 runs),
-   open `evaluation/evaluation.ipynb`, run all cells, then save.
-
-Or from a terminal, in the repository folder:
+When your controller is final: evaluate it (at least 5 runs), then
 
 ```bash
-jupyter nbconvert --to notebook --execute --inplace analysis/analysis.ipynb
+python3 output/collect.py
 ```
 
-```bash
-jupyter nbconvert --to notebook --execute --inplace evaluation/evaluation.ipynb
-```
+copies your code, your best run and your evaluation into `output/`, runs
+both notebooks on them (executed, with all outputs), and runs the
+fair-play code check. You add the video and the report. Everything about
+it: [DELIVERABLES.md](../../DELIVERABLES.md).
 
 **Next:** [6. Tips and troubleshooting](6_tips_and_troubleshooting.md)

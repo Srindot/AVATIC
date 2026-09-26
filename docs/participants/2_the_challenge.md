@@ -68,25 +68,63 @@ Your controller gets exactly what the real drone gives:
 It does **not** get the drone's position or speed, or where the balloons
 are. (The analysis notebook shows them afterwards, for you to learn from.)
 
+### Fair play
+
+The simulator knows everything (the true position, every balloon), and
+your controller runs on the same computer, so it could reach that
+information. **Doing so is cheating.** Your controller may use only the
+public methods of the `Drone` from `avatic_drone` (camera frames,
+telemetry, time, score), and send only `Command`s. Not allowed:
+
+- any other ROS or Gazebo interface (`rclpy`, `gz`, topics such as
+  `/sim/pluto/odometry`, services), including through the `Drone`'s
+  internals (`drone._...`);
+- reading the simulator's or the run's files (the layout, the world, the
+  seed, `analysis/runs/`, `evaluation/sessions/`) or other programs'
+  memory or `/proc` files;
+- starting other programs, or using the network;
+- code that hides what it does (`exec`, `eval`, `__import__`, `getattr`
+  with built-up names, encoded text).
+
+Your own files next to your controller (parameters, a colour table) are
+fine. It is checked twice: **the code** (`evaluation/check_controller.py`)
+and **the running controller** (the simulator watches its ROS
+connections, and, when the launch starts it with `controller:=...` as in
+judging, the libraries it loads, the files it opens and the programs it
+starts; every run's result shows "fair play: clean" or "FLAGGED").
+Check your code yourself before you submit:
+
+```bash
+python3 evaluation/check_controller.py outerloop_controller/my_controller.py
+```
+
+Every line it prints is read by an organiser. If one is harmless (you read
+your own parameter file, say), explain it in your report. **A flag is not
+a verdict:** the organisers read the code and ask you if unsure. A
+controller that reads the ground truth, or tries to hide what it does, is
+**disqualified from the simulation round**; the controllers of all
+finalists are read in full.
+
 ## What you submit
 
-All of these are **required**:
+Everything goes in the `output/` folder; the full list, the video and
+report requirements, and how to collect it all with one command
+(`python3 output/collect.py`) are in **[DELIVERABLES.md](../../DELIVERABLES.md)**.
+In short, all **required**:
 
 1. **Your code:** `outerloop_controller/my_controller.py`, plus any Python
    files you add next to it in `outerloop_controller/`. Do not change
    anything in `simulation_engine/`, `outerloop_controller/avatic_drone/`
    or `hitl/`: the judges use their own copies.
-2. **The analysis notebook of your best run** (`analysis/analysis.ipynb`),
-   executed and saved with all outputs visible.
-3. **The evaluation notebook** (`evaluation/evaluation.ipynb`), executed on
-   an evaluation of your final controller (at least 10 runs).
-4. **A video:** a screen recording of your best simulation run, showing
-   the Gazebo window from arming to the final score.
-5. **A report** explaining your outer-loop idea: how you find the balloons
-   in the image, how you choose which one to go for, how you fly to it and
-   avoid the red ones, and what you tried that did not work.
+2. **Your best run** and its **analysis notebook**, executed.
+3. **An evaluation of your final controller** (at least 5 runs) and its
+   **notebook**, executed.
+4. **A video:** a screen recording of your best run (Gazebo and RViz, from
+   arming to the end), showing the pops and how you avoid the red balloons.
+5. **A technical report** (PDF, at most 8 pages): your approach
+   (perception, decision and red-balloon avoidance, control), results,
+   analysis and at least two failure cases.
 
-How to run and save the notebooks: [page 5](5_testing_and_improving.md).
 The submission format and deadline will be announced by the organisers.
 
 **Next:** [3. Writing your controller](3_writing_your_controller.md)

@@ -4,7 +4,7 @@ THIS IS NOT A SOLUTION TO THE CHALLENGE. It reads the balloon positions
 from the arena configuration and flies to them using simulator ground
 truth, neither of which a team has on the real drone. Its purpose is to
 show the arena mechanics (popping, points, the time limit) and what the
-vehicle can do in 15 s. A competition entry has to find and approach the
+vehicle can do in a short run. A competition entry has to find and approach the
 balloons from the camera image (visual servoing).
 
 Behaviour: first a vertical TAKE-OFF to takeoff_height_m with level

@@ -12,7 +12,7 @@ the balloons in the camera image.
 The demo runs for 35 s (time_limit_s; the competition limit is 25 s), long
 enough to visit the six non-red balloons. Then the simulation pauses and the
 scoreboard prints the result table in this terminal (and shows the final
-score in RViz). time_limit_s:=15 shows the competition-length run.
+score in RViz). time_limit_s:=25 shows a run of the competition length.
 
 Arguments: route_file (default pluto_x_demo config/balloon_demo.yaml),
 time_limit_s (default 35), headless, rviz, result_file.
@@ -48,5 +48,7 @@ def generate_launch_description():
                 'rviz': LaunchConfiguration('rviz'),
                 'result_file': LaunchConfiguration('result_file'),
                 'time_limit_s': LaunchConfiguration('time_limit_s'),
+                # the route is for the default layout: never a seeded one
+                'arena_seed': '',
             }.items()),
     ])

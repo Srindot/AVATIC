@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run a command inside the ROS 2 Humble + Gazebo Harmonic dev image with this
-# repository mounted at /home/rosusr/avatic (the colcon workspace root).
+# repository mounted at /home/rosusr/workspace (the colcon workspace root).
 #
 #   simulation_engine/scripts/dev.sh colcon build
 #   simulation_engine/scripts/dev.sh colcon test --packages-select pluto_x_core

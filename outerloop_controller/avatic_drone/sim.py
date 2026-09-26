@@ -29,7 +29,7 @@ rate. The numbers in brackets were measured in the simulator.
 Safety caps (both backends, avatic_drone.types.SafetyLimits): |roll|,
 |pitch| <= 0.6, |yaw_rate| <= 0.8, throttle <= 0.95, and above 2.5 m
 (barometric) the throttle is limited below hover (0.9 x the hover
-estimate, itself at most 0.8; 0.4 in altitude hold) so the drone descends.
+estimate, itself at most 0.8) so the drone descends.
 
 What you get is only what the real drone provides: the camera image and
 the flight controller's own estimates (attitude, heading, barometric
@@ -75,7 +75,6 @@ COMMAND_TIMEOUT_S = 0.5       # no send_command() for this long -> failsafe (see
 HOVER_ESTIMATE_TIME_CONSTANT_S = 2.0
 FAILSAFE_THROTTLE_RANGE = (0.6, 0.85)
 DEFAULT_HOVER_THROTTLE = 0.76
-CEILING_THROTTLE_ALT_HOLD = 0.4  # above the ceiling in altitude hold: 1400 us = -25 cm/s
 CEILING_HOVER_FRACTION = 0.9     # above the ceiling otherwise: 0.9 x the hover estimate,
 CEILING_HOVER_MAX = 0.8          # ... the estimate capped (a climbing controller inflates it)
 AIRBORNE_ALT_M = 0.3          # the hover estimate learns only above this altitude
@@ -153,9 +152,7 @@ class _Link(Node):
                 # same rule as the hardware backend: never lift a grounded drone
                 airborne = (command.throttle > FLYING_THROTTLE or
                             (altitude_m is not None and altitude_m > 0.3))
-                if command.altitude_hold:
-                    safe, what = StickCommand(throttle=0.5, altitude_hold=True), 'altitude hold'
-                elif airborne:
+                if airborne:
                     low, high = FAILSAFE_THROTTLE_RANGE
                     safe = StickCommand(throttle=min(max(self.hover_estimate, low), high))
                     what = f'throttle {safe.throttle:.2f} (estimated hover)'
@@ -167,7 +164,7 @@ class _Link(Node):
                         f'no yaw, {what}')
                     self.timed_out = True
                 command = safe
-            elif (arm and not command.altitude_hold and altitude_m is not None and
+            elif (arm and altitude_m is not None and
                   AIRBORNE_ALT_M < altitude_m <= SAFETY_LIMITS.max_altitude_m):
                 # learns only while flying (not from idle on the pad)
                 # running average of the throttle sent while armed: ~hover
@@ -178,12 +175,11 @@ class _Link(Node):
                     low), high)
             # altitude ceiling (safety): above it, a throttle below hover so
             # the drone descends (same rule as the hardware backend)
-            ceiling = (CEILING_THROTTLE_ALT_HOLD if command.altitude_hold else
-                       CEILING_HOVER_FRACTION * min(self.hover_estimate, CEILING_HOVER_MAX))
+            ceiling = CEILING_HOVER_FRACTION * min(self.hover_estimate, CEILING_HOVER_MAX)
             if (arm and altitude_m is not None and altitude_m > SAFETY_LIMITS.max_altitude_m
                     and command.throttle > ceiling):
                 command = StickCommand(roll=command.roll, pitch=command.pitch, yaw=command.yaw,
-                                       throttle=ceiling, altitude_hold=command.altitude_hold)
+                                       throttle=ceiling)
                 if 'ceiling' not in self.warned_caps:
                     self.warned_caps.add('ceiling')
                     self.get_logger().warn(
@@ -275,7 +271,7 @@ class SimDrone:
                          armed=s.armed, ready_to_arm=s.ok_to_arm,
                          roll_deg=s.roll_deg, pitch_deg=s.pitch_deg,
                          heading_deg=s.heading_deg, altitude_m=s.altitude_m,
-                         battery_v=s.battery_v, altitude_hold=s.altitude_hold)
+                         battery_v=s.battery_v)
 
     def arena(self) -> ArenaStatus:
         """Score, time left, events, and the result once the run is over."""
@@ -290,20 +286,18 @@ class SimDrone:
     # --------------------------------------------------------------- outputs
 
     def send_command(self, roll: float = 0.0, pitch: float = 0.0,
-                     yaw_rate: float = 0.0, throttle: float = 0.0,
-                     altitude_hold: bool = False) -> None:
+                     yaw_rate: float = 0.0, throttle: float = 0.0) -> None:
         """Stick command, held until the next call (see the module docstring
         for the meaning and range of each value; out-of-range values are
         clipped). Call it at least every 0.5 s: otherwise a failsafe levels
         the sticks, stops the yaw and sets the throttle to an estimate of
         hover (the average of your recent throttle; 0 if the drone was on
-        the ground, altitude hold if it was in altitude hold) until the
-        next call."""
+        the ground) until the next call."""
         for name, value in (('roll', roll), ('pitch', pitch), ('yaw_rate', yaw_rate),
                             ('throttle', throttle)):
             if not math.isfinite(value):
                 raise ValueError(f'{name} must be a finite number, got {value}')
-        safe, capped = apply_safety_limits(Command(roll, pitch, yaw_rate, throttle, altitude_hold))
+        safe, capped = apply_safety_limits(Command(roll, pitch, yaw_rate, throttle))
         for name in capped:
             if name not in self._link.warned_caps:
                 self._link.warned_caps.add(name)
@@ -311,7 +305,7 @@ class SimDrone:
                     f'{name} command beyond the safety cap: clipped (see avatic_drone.types.'
                     'SafetyLimits); warned once')
         command = StickCommand(roll=safe.roll, pitch=safe.pitch, yaw=safe.yaw_rate,
-                               throttle=safe.throttle, altitude_hold=safe.altitude_hold).clipped()
+                               throttle=safe.throttle).clipped()
         with self._link.lock:
             self._link.command = command
             self._link.last_command_s = self._link.now_s()
@@ -322,7 +316,7 @@ class SimDrone:
         if not isinstance(command, Command):
             raise TypeError(f'send() needs a Command, got {type(command).__name__}')
         self.send_command(roll=command.roll, pitch=command.pitch, yaw_rate=command.yaw_rate,
-                          throttle=command.throttle, altitude_hold=command.altitude_hold)
+                          throttle=command.throttle)
 
     # --------------------------------------------------------------- arming
 

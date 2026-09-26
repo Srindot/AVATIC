@@ -71,7 +71,7 @@ met.
 | `the simulator is paused: its run is over` | One run per launch: stop it (Ctrl-C) and start it again. |
 | `[ERROR] ... process has died ... exit code -2` after Ctrl-C | Normal: the simulator stopped because you asked it to. |
 | `... command beyond the safety cap: clipped` | You asked for more than the limits (page 3). Harmless, but your controller is not getting what it asks for. |
-| The drone drops to the ground | `altitude_hold=True` (do not use it), or the throttle was cut suddenly. |
+| The drone drops to the ground | The throttle was cut suddenly, or your height loop gives too little throttle (hover is about 0.76). |
 | The altitude reading jumps to about 0 in the air | You cut the throttle hard. The flight controller reset its altitude (page 3, "Two things to avoid"). |
 | The drone slides away while "hovering" | Normal: wind and small errors. Correct with the camera. |
 | Your code crashed during a run | The traceback is printed above `step() raised an error`. Fix it and fly again. |

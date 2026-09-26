@@ -203,9 +203,10 @@ YAML before validation.
    Pluto X hovers near 1500 us (then the thrust model's hover is wrong and
    should be re-estimated) or the real drone dips too. Measure hover
    throttle on hardware (first session) before changing the model. Until
-   then: participants fly without altitude hold; the hardware backend lands
-   in altitude hold (the firmware's design); the MSP test bridge emulates
-   that landing without the simulated firmware's altitude hold.
+   then: altitude hold is not in the participant API (`avatic_drone`
+   `Command` has no `altitude_hold`; AUX3 is always off), and the hardware
+   backend lands with its own descent-rate control on the throttle; the MSP
+   test bridge still emulates the firmware's land command.
 
 ## 5. Developer outer-loop controllers (`pluto_x_autonomy`)
 

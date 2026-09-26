@@ -72,7 +72,6 @@ def test_rc_channel_mapping_matches_simulator():
     from avatic_hitl.hardware import _to_channels
     from avatic_drone.types import Command
     assert _to_channels(Command(), arm=False) == [1500, 1500, 1000, 1500, 2000, 1000, 1000, 1000]
-    assert _to_channels(Command(roll=1, pitch=-1, yaw_rate=0.2, throttle=1,
-                                altitude_hold=True), arm=True) == \
-        [2000, 1000, 2000, 1600, 2000, 1000, 1500, 1500]
+    assert _to_channels(Command(roll=1, pitch=-1, yaw_rate=0.2, throttle=1),
+                        arm=True) == [2000, 1000, 2000, 1600, 2000, 1000, 1000, 1500]
     assert _to_channels(Command(roll=5, throttle=-2), arm=True)[:3] == [2000, 1500, 1000]

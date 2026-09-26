@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Evaluates an outer-loop controller over many random balloon layouts.
 
-    python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
+    python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 5
 
 Each run is a normal competition run (headless, the official rules: 25 s from arming, 18 balloons), with its
 own random layout. Everything is saved to
@@ -18,7 +18,7 @@ evaluation/sessions/<date-time>/:
 Then open evaluation/evaluation.ipynb to see the results.
 
 Options:
-  --runs N            number of runs (default 10)
+  --runs N            number of runs (default 5)
   --seeds 5,17,301    use these seeds (overrides --runs); for judging, the
                       organisers use a list of seeds the teams have not seen
   --timeout S         wall-clock limit per run (default 120 s)
@@ -56,6 +56,8 @@ REPO = os.path.dirname(HERE)
 SESSIONS = os.path.join(HERE, 'sessions')
 sys.path.insert(0, os.path.join(REPO, 'analysis'))
 import runlog  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import check_controller  # noqa: E402
 
 SHUTDOWN_GRACE_S = 10.0
 _ACTIVE = set()    # process groups of running launches (killed on any exit)
@@ -168,6 +170,10 @@ def _fill_row(row, run_dir):
     check = runlog.rules_check(run)
     row['time_limit_s'] = check['time_limit_s']
     row['official_rules'] = int(check['official'])
+    fair = runlog.fair_play(run)
+    row['fair_play'] = fair['verdict']
+    if fair['flags']:
+        row['fair_play_flags'] = ' | '.join(fair['flags'])
     ready = run.telemetry.get('ready_to_arm')
     row['ready'] = int(ready is not None and bool((ready > 0.5).any()))
     s = runlog.summary(run)
@@ -196,7 +202,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--controller', default='outerloop_controller/my_controller.py')
-    parser.add_argument('--runs', type=int, default=10)
+    parser.add_argument('--runs', type=int, default=5)
     parser.add_argument('--seeds', default='', help='comma-separated seeds (overrides --runs)')
     parser.add_argument('--timeout', type=float, default=120.0)
     args = parser.parse_args()
@@ -224,11 +230,21 @@ def main():
         suffix += 1
         session = os.path.join(SESSIONS, f'{stamp}_{suffix}')
     os.makedirs(os.path.join(session, 'logs'))
+    findings = check_controller.check_controller(controller)   # the code, before any run
     meta = {'controller': controller, 'controller_sha256': sha256(controller),
             'started_local_time': datetime.now().isoformat(timespec='seconds'),
-            'seeds': seeds, 'runs': len(seeds)}
+            'seeds': seeds, 'runs': len(seeds),
+            'code_check': {'verdict': check_controller.verdict(findings),
+                           'findings': [str(f) for f in findings]}}
     print(f'evaluation session {session}\n  controller {controller}\n  {len(seeds)} runs, '
           f'seeds {seeds}\n  about {len(seeds) * 40 // 60 + 1} min', flush=True)
+    if findings:
+        print(f'  code check: {len(findings)} finding(s) for an organiser to review '
+              '(python3 evaluation/check_controller.py <controller>):', flush=True)
+        for finding in findings:
+            print(f'    {finding}', flush=True)
+    else:
+        print('  code check: clean', flush=True)
     signal.signal(signal.SIGTERM, _raise_interrupt)
     signal.signal(signal.SIGHUP, _raise_interrupt)
 
@@ -242,7 +258,9 @@ def main():
             print(f"  [{i:2d}/{len(seeds)}] seed {seed:>6}: {row['status']:<11} score "
                   f"{row.get('score')}  (green {row.get('green_popped', 0)}, blue "
                   f"{row.get('blue_popped', 0)}, yellow {row.get('yellow_popped', 0)}, red "
-                  f"{row.get('red_popped', 0)})  {wall:4.0f} s", flush=True)
+                  f"{row.get('red_popped', 0)})  {wall:4.0f} s"
+                  + ('  FLAGGED (fair play)' if row.get('fair_play') == 'flagged' else ''),
+                  flush=True)
     except KeyboardInterrupt:
         print('\ninterrupted: saving the runs done so far', flush=True)
     finally:
@@ -252,7 +270,8 @@ def main():
           f"best possible {meta['best_possible_per_run']} per run); over the "
           f"{meta['completed_runs']} completed runs: mean {meta['mean_score']}, min "
           f"{meta['min_score']}, max {meta['best_run_score']}; red hits {meta['red_hits_total']}; simulator failures "
-          f"{meta['simulator_failures']}\nsaved to {session}\n"
+          f"{meta['simulator_failures']}\nfair play: code check {meta['code_check']['verdict']}, "
+          f"{meta['fair_play_flagged_runs']} run(s) flagged\nsaved to {session}\n"
           'open evaluation/evaluation.ipynb to see the results', flush=True)
 
 
@@ -284,6 +303,7 @@ def save(session, meta, rows, finished=False):
         'best_possible_per_run': next((r['max_score'] for r in rows
                                        if r.get('max_score') is not None), None),
         'red_hits_total': sum(r.get('red_popped') or 0 for r in complete),
+        'fair_play_flagged_runs': sum(1 for r in rows if r.get('fair_play') == 'flagged'),
     })
     tmp = os.path.join(session, 'session.yaml.tmp')
     with open(tmp, 'w', encoding='utf-8') as out:

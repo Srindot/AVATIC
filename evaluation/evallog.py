@@ -25,6 +25,17 @@ import runlog  # noqa: E402
 COLOURS = runlog.BALLOON_COLOURS
 
 
+def _points():
+    """Points per colour, from the arena config (the official rules)."""
+    points = {'green': 100, 'blue': 50, 'yellow': 25, 'red': -75}
+    colours = (runlog._load_yaml(runlog.RULES_FILE) or {}).get('colors', {})
+    points.update({c: int(v['points']) for c, v in colours.items() if c in points})
+    return points
+
+
+POINTS = _points()
+
+
 @dataclass
 class Session:
     session_id: str
@@ -129,6 +140,11 @@ def objective(session: Session) -> dict:
            'not_official': sum(1 for r in session.rows if r.get('official_rules') == 0),
            'official_unknown': sum(1 for r in session.rows if r.get('official_rules') is None
                                    and r.get('status') == 'complete'),
+           'fair_play_flagged': [r['run'] for r in session.rows if r.get('fair_play') == 'flagged'],
+           'fair_play_unchecked': sum(1 for r in session.rows
+                                      if r.get('fair_play') in (None, 'not checked')
+                                      and r.get('status') == 'complete'),
+           'code_check': session.meta.get('code_check'),
            'colours': {}}
     for colour in COLOURS:
         popped = sum(r.get(f'{colour}_popped') or 0 for r in rows)
@@ -153,6 +169,23 @@ def _rules_md(o: dict) -> str:
     return f'**Rules:** every run used the official competition rules: {desc}.'
 
 
+def _fair_play_md(o: dict) -> str:
+    code = o['code_check']
+    code_text = ('code check: not recorded' if code is None else
+                 'code check: clean' if code.get('verdict') == 'clean' else
+                 f"code check: {len(code.get('findings', []))} finding(s) to review "
+                 "(session.yaml, code_check)")
+    if o['fair_play_flagged']:
+        return (f"> **FLAGGED BY THE FAIR-PLAY CHECK:** {len(o['fair_play_flagged'])} run(s) "
+                f"({', '.join(o['fair_play_flagged'])}; see the fair_play_flags column); "
+                f"{code_text}. An organiser reviews the controller before these results count.")
+    if code and code.get('verdict') != 'clean':
+        return f'> **Fair play:** no run flagged; {code_text}.'
+    unchecked = (f" (not recorded for {o['fair_play_unchecked']} older run(s))"
+                 if o['fair_play_unchecked'] else '')
+    return f'**Fair play:** no run flagged{unchecked}; {code_text}.'
+
+
 def show_objective(session: Session) -> None:
     o = objective(session)
     fmt = (lambda v: '?' if v is None else v)
@@ -165,7 +198,7 @@ def show_objective(session: Session) -> None:
           + (f" (**{o['never_armed']} never armed**, counted as 0)" if o['never_armed'] else ''),
           f"controller `{os.path.basename(session.meta.get('controller', '?'))}` "
           f"(sha256 {str(session.meta.get('controller_sha256', '?'))[:12]})", '',
-          _rules_md(o), '',
+          _rules_md(o), '', _fair_play_md(o), '',
           '| | |', '|---|---|',
           f"| min / median / max | {fmt(o['min_score'])} / {fmt(o['median_score'])} / {fmt(o['max_score'])} |",
           f"| mean over completed runs only | {fmt(o['mean_score'])} |",
@@ -176,6 +209,7 @@ def show_objective(session: Session) -> None:
           '| balloon | popped (all runs) | hit rate |', '|---|---|---|']
     md += [f"| {c} | {v['popped']} / {v['available']} | {rate(v)} |" for c, v in o['colours'].items()]
     text = [_rules_md(o).replace('**', '').lstrip('> '),
+            _fair_play_md(o).replace('**', '').lstrip('> '),
             f"MEAN SCORE {fmt(o['mean_score_all'])} / {fmt(o['best_possible_per_run'])} per run "
             f"({o['completed']}/{o['runs']} runs completed, {o['failed']} failed)",
             f"  min {fmt(o['min_score'])}  median {fmt(o['median_score'])}  max {fmt(o['max_score'])}"
@@ -205,35 +239,86 @@ def table(session: Session) -> None:
 # ----------------------------------------------------------------- plots
 
 def plot_scores(session: Session):
-    """Score of each run, and their distribution."""
+    """Points per run, split by colour: the good balloons stack up from 0,
+    red hits hang below it; the black dash is the run's score."""
     plt = runlog._plt()
     rows = session.rows
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4), gridspec_kw={'width_ratios': [2, 1]})
-    names = [str(i + 1) for i in range(len(rows))]
-    scores = [r.get('score') if r.get('score') is not None else 0 for r in rows]
-    colours = ['tab:red' if (r.get('red_popped') or 0) else
-               ('tab:gray' if r.get('status') != 'complete' else 'tab:blue') for r in rows]
-    ax1.bar(names, scores, color=colours)
+    fig, ax = plt.subplots(figsize=(max(8.0, 0.45 * len(rows) + 2), 4.5))
+    x = np.arange(len(rows))
+    bottom = np.zeros(len(rows))
+    for colour in COLOURS[:3]:
+        points = np.array([(r.get(f'{colour}_popped') or 0) * POINTS[colour] for r in rows],
+                          dtype=float)
+        ax.bar(x, points, bottom=bottom, color=runlog.COLOURS[colour], label=colour)
+        bottom += points
+    red = np.array([(r.get('red_popped') or 0) * POINTS['red'] for r in rows], dtype=float)
+    ax.bar(x, red, color=runlog.COLOURS['red'], label='red (penalty)')
+    for i, r in enumerate(rows):
+        if r.get('status') == 'complete' and r.get('score') is not None:
+            ax.plot([i - 0.4, i + 0.4], [r['score']] * 2, color='k', lw=2)
+        else:
+            ax.text(i, 5, r.get('status', '?').replace('_', ' '), ha='center', va='bottom',
+                    rotation=90, fontsize=8, color='0.3')
     o = objective(session)
     if o['mean_score_all'] is not None:
-        ax1.axhline(o['mean_score_all'], color='k', ls='--', lw=1,
-                    label=f"mean {o['mean_score_all']}")
-    if o['best_possible_per_run']:
-        ax1.axhline(o['best_possible_per_run'], color='tab:green', ls=':', lw=1,
-                    label=f"best possible {o['best_possible_per_run']}")
-    ax1.axhline(0, color='k', lw=0.5)
-    ax1.set_xlabel('run (red bar: hit a red balloon, grey: failed)')
-    ax1.set_ylabel('score')
-    ax1.set_title('score per run')
-    ax1.legend(loc='upper right', fontsize=8)
-    s = session.scores()
-    if len(s):
-        top = o['best_possible_per_run'] or s.max()
-        bins = np.arange(min(-75, s.min()) - 12.5, max(top, s.max()) + 25, 25)
-        ax2.hist(s, bins=bins, color='tab:blue', edgecolor='white')
-    ax2.set_xlabel('score')
-    ax2.set_ylabel('runs')
-    ax2.set_title('distribution')
+        ax.axhline(o['mean_score_all'], color='k', ls='--', lw=1,
+                   label=f"mean score {o['mean_score_all']}")
+    ax.axhline(0, color='k', lw=0.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels([str(i + 1) for i in x])
+    ax.set_xlabel('run')
+    ax.set_ylabel('points')
+    best = o['best_possible_per_run']
+    ax.set_title('points per run by colour; black dash = the run\'s score'
+                 + (f' (best possible {best})' if best else ''))
+    top = max([*bottom, *(r.get('score') or 0 for r in rows), 1.0])
+    ax.set_ylim(min(red.min(initial=0.0), 0.0) * 1.15 - 5, top * 1.12)
+    ax.legend(fontsize=8, ncol=5, loc='upper center', bbox_to_anchor=(0.5, -0.15))
+    ax.grid(alpha=0.3, axis='y')
+    fig.tight_layout()
+    return fig
+
+
+def plot_score_over_time(session: Session):
+    """The score of every run against the time since arming (thin lines) and
+    their mean (thick): how fast points come, and whether they stop coming."""
+    plt = runlog._plt()
+    fig, ax = plt.subplots(figsize=(9, 4))
+    limit = None
+    grid, curves = None, []
+    for row in session.rows:
+        if not _recorded(session, row) or row.get('status') != 'complete':
+            continue
+        run = runlog.load_run(row['run'], root=session.path)
+        t_arm = run.arm_time_s
+        if t_arm is None:
+            continue
+        limit = limit or run.meta.get('time_limit_s')
+        ev = run.events
+        times, totals = [0.0], [0.0]
+        for t, kind, total in zip(ev.get('t_s', []), ev.get('kind', []), ev.get('total', [])):
+            if kind == 'pop':
+                times.append(float(t) - t_arm)
+                totals.append(float(total))
+        end = float(limit or max(times))
+        times.append(end)
+        totals.append(totals[-1])
+        ax.step(times, totals, where='post', color='tab:blue', lw=0.8, alpha=0.35)
+        grid = np.linspace(0, end, 251) if grid is None else grid
+        curves.append(np.array(totals)[np.searchsorted(times, grid, side='right') - 1])
+    if curves:
+        ax.plot(grid, np.mean(curves, axis=0), color='k', lw=2.5,
+                label=f'mean of {len(curves)} runs')
+        ax.legend(fontsize=8, loc='upper left')
+    else:
+        ax.set_title('no recorded runs')
+    if limit:
+        ax.axvline(limit, color='tab:red', ls=':', lw=1)
+    ax.axhline(0, color='k', lw=0.5)
+    ax.set_xlabel('s after arming')
+    ax.set_ylabel('score so far')
+    ax.set_title('score during the run (each thin line = one run)')
+    ax.grid(alpha=0.3)
     fig.tight_layout()
     return fig
 

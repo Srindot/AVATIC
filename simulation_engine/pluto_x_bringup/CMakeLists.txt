@@ -13,6 +13,7 @@ install(PROGRAMS
   scripts/arena_check.py
   scripts/arena_scoreboard.py
   scripts/run_recorder.py
+  scripts/integrity_monitor.py
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

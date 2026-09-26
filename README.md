@@ -11,6 +11,7 @@ and score your algorithm.
 > [macOS](workshop/manual/setup_macos.md), and how to use everything
 > (every command and option): **[workshop/manual.md](workshop/manual.md)**.
 > The workshop slides are in [workshop/presentation.pdf](workshop/presentation.pdf).
+> What to submit: **[DELIVERABLES.md](DELIVERABLES.md)**.
 
 ## The competition
 
@@ -38,6 +39,15 @@ The competition has **two rounds**:
 2. **Hardware round.** The top-performing teams from the simulation round
    are shortlisted and fly the **real Pluto X** in a real arena, with the
    same code.
+
+> **What you submit for the simulation round: [DELIVERABLES.md](DELIVERABLES.md).**
+> Your controller code, your best run and an evaluation (with both notebooks
+> executed), a **video** of your best run popping balloons and avoiding the
+> red ones, and a **technical report** (approach, results, analysis, failure
+> cases). Everything goes in [`output/`](output/README.md); one command,
+> `python3 output/collect.py`, collects most of it. Your controller may use
+> only the camera and the flight controller's readings: see
+> [fair play](docs/participants/2_the_challenge.md#fair-play).
 
 <p align="center">
   <img src="images/PlutoX_drone_image.webp" width="48%" alt="The Pluto X drone kit">
@@ -170,16 +180,21 @@ AVATIC/
 │   ├── examples/hello_drone.py example: take off, turn, look at the camera
 │   └── avatic_drone/           the drone interface (do not change)
 ├── analysis/                look at one flight (every run is saved here)
-├── evaluation/              test your controller on many new layouts
+├── evaluation/              test your controller on many new layouts, and the
+│                            fair-play code check (check_controller.py)
+├── output/                  your submission goes here (collect.py fills it)
+├── DELIVERABLES.md          what to submit
 ├── docs/participants/       the step-by-step participant guide
+├── workshop/                the manual (setup, usage) and the workshop slides
 ├── demo/                    a demo: a pre-planned route that pops all balloons
 ├── hitl/                    the connection to the real drone (organisers)
 ├── simulation_engine/       the simulator (do not change)
 ├── firmware/magisv2/        the drone's real firmware (do not change)
+├── docs/                    technical documents (architecture, arena, parameters)
 ├── images/                  pictures used in this README
 ├── .devcontainer/           the Docker development environment
 ├── resources/               Pluto Python tutorials (reference)
-└── literature_survey/       papers (reference)
+└── literature_survey/       related papers (reading list with links)
 ```
 
 You only ever write code in `outerloop_controller/`.
@@ -489,7 +504,7 @@ pauses and the score is printed. Press **Ctrl-C** to stop. (The
 | `rviz:=false` | no RViz window | `true` |
 | `arena_seed:=random` | a new random balloon layout for this run | `analysis`: the development layout, whose seed is in `analysis/seed.yaml` (42 at first) |
 | `arena_seed:=7` | a specific layout (any number) | |
-| `time_limit_s:=30` | a longer run while developing (judging uses 15) | `15` |
+| `time_limit_s:=30` | a longer run while developing (the run is then marked not official) | `25` (the official rules) |
 | `record:=false` | do not save this run | `true` |
 | `record_dir:=<folder>` | save runs in this folder instead of `analysis/runs/` | `analysis/runs` |
 
@@ -522,10 +537,10 @@ When your controller works on one layout, test it on layouts it has never
 seen, the way it will be judged:
 
 ```bash
-python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
+python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 5
 ```
 
-It flies 10 runs on 10 random layouts (about 40 s each on a fast computer,
+It flies 5 runs on 5 random layouts (about 40 s each on a fast computer,
 no windows) and prints your average score. Then open the report:
 
 ```bash
@@ -541,30 +556,60 @@ everything step by step: the rules, every function you can use, the
 camera and directions, tips for a first controller, and fixes for common
 errors.
 
+## Documentation
+
+**For teams**
+
+| Document | What it covers |
+|---|---|
+| [DELIVERABLES.md](DELIVERABLES.md) | what to submit, the video and report requirements, `output/collect.py` |
+| [workshop/manual.md](workshop/manual.md) | the in-depth manual: setup on [Ubuntu](workshop/manual/setup_ubuntu.md), [Windows](workshop/manual/setup_windows.md) and [macOS](workshop/manual/setup_macos.md), and [usage](workshop/manual/usage.md) (every command and option) |
+| [workshop/presentation.pdf](workshop/presentation.pdf) | the workshop slides |
+| [Participant guide](docs/participants/README.md) | step by step, seven pages: |
+| &nbsp;&nbsp;1. [Getting started](docs/participants/1_getting_started.md) | install, first flight |
+| &nbsp;&nbsp;2. [The challenge](docs/participants/2_the_challenge.md) | points, time, layouts, what you may use, [fair play](docs/participants/2_the_challenge.md#fair-play), what you submit |
+| &nbsp;&nbsp;3. [Writing your controller](docs/participants/3_writing_your_controller.md) | the template, commands, telemetry, safety limits, height control |
+| &nbsp;&nbsp;4. [Camera and directions](docs/participants/4_camera_and_directions.md) | what the camera sees, which way is which, distance from pixels |
+| &nbsp;&nbsp;5. [Testing and improving](docs/participants/5_testing_and_improving.md) | the analysis and evaluation notebooks, collecting the submission |
+| &nbsp;&nbsp;6. [Tips and troubleshooting](docs/participants/6_tips_and_troubleshooting.md) | how to start, common errors and fixes, glossary |
+| &nbsp;&nbsp;7. [The real drone](docs/participants/7_real_drone.md) | the hardware round |
+| [outerloop_controller/README.md](outerloop_controller/README.md) | the controller folder and the API at a glance |
+| [analysis/README.md](analysis/README.md) | the analysis notebook, the development layout (seed), the recorded files |
+| [evaluation/README.md](evaluation/README.md) | the evaluation and its report; the fair-play checks (organisers) |
+| [output/README.md](output/README.md) | the submission folder |
+| [demo/README.md](demo/README.md) | the demo route |
+| [literature_survey/README.md](literature_survey/README.md) | related papers (links) |
+
+**Technical and for organisers**
+
+| Document | What it covers |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | how the simulator works (firmware in the loop), the firmware findings |
+| [docs/arena.md](docs/arena.md) | the arena: balloons, popping, scoring, the time limit, the rules and why they were chosen |
+| [docs/pluto_x_parameters.md](docs/pluto_x_parameters.md) | every vehicle parameter and its source |
+| [docs/legacy_port.md](docs/legacy_port.md) | the older (legacy) controller stack, still available as `flight_controller: legacy` |
+| [simulation_engine/README.md](simulation_engine/README.md) | the simulator's packages (organisers only) |
+| [hitl/README.md](hitl/README.md) | the real-drone backend (MSP over Wi-Fi), its safety features, the first hardware session checklist |
+
 ## Submission
 
-Your submission must include **all** of the following:
+Everything goes in the `output/` folder; the full list, the video and
+report requirements, and how to collect it all with one command
+(`python3 output/collect.py`) are in **[DELIVERABLES.md](DELIVERABLES.md)**.
+In short, all **required**:
 
-1. **Your code:** `outerloop_controller/my_controller.py` and any files you
-   added in `outerloop_controller/`.
-2. **The analysis notebook of your best run:** `analysis/analysis.ipynb`,
-   **executed** (with all outputs visible) on your best run.
-3. **The evaluation notebook:** `evaluation/evaluation.ipynb`,
-   **executed** on an evaluation of your final controller (at least 10
-   runs).
-4. **A video:** a screen recording of your best simulation run, showing
-   the Gazebo and RViz windows from arming to the end (RViz shows the
-   live and the final score).
-5. **A report** explaining your outer-loop idea: how you find the
-   balloons in the image, how you decide which one to go for, how you fly
-   to it and avoid the red ones, and what you tried that did not work.
-
-To save an executed notebook: run all cells, then save it (*File → Save*). Or from a
-terminal:
-
-```bash
-jupyter nbconvert --to notebook --execute --inplace analysis/analysis.ipynb
-```
+1. **Your code:** `outerloop_controller/my_controller.py`, plus any Python
+   files you add next to it in `outerloop_controller/`. Do not change
+   anything in `simulation_engine/`, `outerloop_controller/avatic_drone/`
+   or `hitl/`: the judges use their own copies.
+2. **Your best run** and its **analysis notebook**, executed.
+3. **An evaluation of your final controller** (at least 5 runs) and its
+   **notebook**, executed.
+4. **A video:** a screen recording of your best run (Gazebo and RViz, from
+   arming to the end), showing the pops and how you avoid the red balloons.
+5. **A technical report** (PDF, at most 8 pages): your approach
+   (perception, decision and red-balloon avoidance, control), results,
+   analysis and at least two failure cases.
 
 The submission format and deadline will be announced by the organisers.
 

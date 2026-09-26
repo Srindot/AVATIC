@@ -14,7 +14,7 @@
 # six others (350 points, the best achievable) in the shortest order,
 # 17.5 m and ~385 deg of turning, and every leg passes at least 1.08 m from
 # both red balloons (red 4 and red 5 are obstacles, not targets).
-# For the 15 s competition length use demo/config/balloon_demo_15s.yaml.
+# For a short 15 s run use demo/config/balloon_demo_15s.yaml.
 arena_config: ''          # '' = pluto_x_gazebo config/arena_default.yaml
 route: [0, 6, 2, 3, 7, 1]   # yellow, green, blue, blue, green, yellow (no red)
 takeoff_height_m: 0.5     # climb straight up first (no tilt/yaw on the ground)

@@ -126,12 +126,14 @@ class FcLink : public rclcpp::Node {
     status_publisher_->publish(status);
   }
 
-  gz::transport::Node gz_node_;
-  gz::transport::Node::Publisher rc_publisher_;
   rclcpp::Subscription<pluto_x_interfaces::msg::RcCommand>::SharedPtr
       rc_subscription_;
   rclcpp::Publisher<pluto_x_interfaces::msg::FlightControllerStatus>::SharedPtr
       status_publisher_;
+  // declared last, so destroyed first: its telemetry callback (a
+  // gz-transport thread) uses status_publisher_, which must outlive it
+  gz::transport::Node gz_node_;
+  gz::transport::Node::Publisher rc_publisher_;
 };
 
 }  // namespace

@@ -12,6 +12,26 @@ analysis/runs/*
 !analysis/runs/.gitkeep
 evaluation/sessions/*
 !evaluation/sessions/.gitkeep
+# the submission folder: filled by output/collect.py and by you (videos,
+# the report); zip it to submit, never commit it
+output/*
+!output/README.md
+!output/collect.py
+
+# screen recordings, archives, ROS bags, Python environments
+*.mp4
+*.mkv
+*.webm
+*.mov
+*.avi
+*.zip
+*.tar.gz
+rosbag2_*/
+*.db3
+*.mcap
+.venv/
+venv/
+*.egg-info/
 
 # Python
 __pycache__/

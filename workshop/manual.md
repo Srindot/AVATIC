@@ -30,6 +30,12 @@ The [participant guide](../docs/participants/README.md) explains the rules,
 every function you can use, the camera and directions, and ideas for a
 first controller.
 
+## 4. Submit
+
+[DELIVERABLES.md](../DELIVERABLES.md): what to submit (code, best run,
+notebooks, video, technical report) and how to collect it in `output/`
+with `python3 output/collect.py`.
+
 ## Help
 
 Questions? Contact **Srinath Bhamidipati** at

@@ -71,9 +71,23 @@ Useful numbers:
   flight controller then thinks the drone was thrown, resets its altitude
   reading to 0 in mid-air, and your altitude control goes wrong. Keep the
   throttle above about 0.5 while flying and change it smoothly.
-- **Do not use `altitude_hold=True` for now.** In the simulator it makes the
-  drone drop. Control the height yourself with the throttle, as the
-  template does.
+- **Do not hard-code the hover throttle.** 0.76 is the simulator's value; the
+  real drone's is not measured yet and changes as the battery drains. Let
+  your height loop correct it (for example with an integral term).
+
+## Height control is yours
+
+There is no altitude hold: the throttle is thrust, not a height or a climb
+rate. Holding and changing height is part of the challenge.
+
+- The template's height loop (`step()`, the lines using `HOVER_THROTTLE`)
+  holds 1 m and is a working starting point. You may keep it or improve it.
+- **Tilting costs lift.** Part of the thrust now pushes sideways: at 16° the
+  drone needs about 4 % more throttle, at 20° about 6 %, or it sinks.
+  Dividing by cos(tilt) makes up for it.
+- `altitude_m` is noisy (about ±0.3 m). Your loop reacts to that noise, so
+  filter it or keep the gains gentle; the template estimates the climb rate
+  from successive readings.
 
 ## Telemetry: what the drone tells you
 
@@ -88,7 +102,6 @@ Useful numbers:
 | `battery_v` | battery voltage |
 | `armed` | motors running |
 | `ready_to_arm` | the flight controller has finished its start-up calibration |
-| `altitude_hold` | the firmware's altitude hold is on (keep it off, see above) |
 | `time_s` | when this reading was taken |
 
 There is **no position and no speed.** You can estimate your climb rate

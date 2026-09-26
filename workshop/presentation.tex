@@ -231,11 +231,14 @@
       \begin{enumerate}\small
         \item your controller: \code{outerloop\_controller/}
         \item the \textbf{analysis notebook} of your best run, executed
-        \item the \textbf{evaluation notebook}, executed ($\geq$10 runs)
-        \item a \textbf{video} of your best run (Gazebo + RViz)
-        \item a \textbf{report}: your outer-loop idea, what worked,
-              what did not
+        \item the \textbf{evaluation notebook}, executed ($\geq$5 runs)
+        \item a \textbf{video} of your best run (Gazebo + RViz):
+              pops, and the red balloons avoided
+        \item a \textbf{technical report} (PDF, $\leq$8 pages):
+              approach, results, analysis, failure cases
       \end{enumerate}
+      All in \code{output/}: \code{python3 output/collect.py};
+      details in \code{DELIVERABLES.md}.
       Judged on layouts \textbf{you have not seen}.
     \end{block}
     \column{0.49\textwidth}
@@ -469,7 +472,7 @@ ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controll
 \begin{frame}{Analysis: what happened, over time}
   \centering
   \includegraphics[width=0.97\linewidth,height=0.72\textheight,keepaspectratio]{figures/run_overview.png}\\
-  \small Top view, height, and the distance to each balloon (dotted: red). Did you get close to the one you wanted?
+  \small Top view, height, and the distance to the nearest balloon of each colour (dotted: red). Did you get close to the one you wanted?
 \end{frame}
 
 \begin{frame}[fragile]{Evaluation: test like the judges}
@@ -480,10 +483,10 @@ ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controll
 python3 evaluation/evaluate.py \textbackslash
   --controller \textbackslash
     outerloop_controller/my_controller.py \textbackslash
-  --runs 10
+  --runs 5
 \end{semiverbatim}
     \begin{itemize}
-      \item 10 runs on 10 \textbf{random layouts}, no windows
+      \item 5 runs on 5 \textbf{random layouts}, no windows
             (about 40\,s each)
       \item then \code{evaluation/evaluation.ipynb}:
             \textbf{average score}, worst and best run, red hits,
@@ -580,7 +583,6 @@ python3 outerloop_controller/my_controller.py --hardware
     \begin{itemize}\scriptsize
       \item the same commands, readings and sign conventions
       \item the same firmware and safety limits
-      \item landing at the end, Ctrl-C = land, twice = motors off
     \end{itemize}
     \column{0.49\textwidth}
     \small\textbf{Different on the real drone}
@@ -588,6 +590,8 @@ python3 outerloop_controller/my_controller.py --hardware
       \item video delay, fewer frames per second
       \item real lighting: re-tune your colour ranges
       \item hover throttle depends on the drone and battery
+      \item landing at the end, Ctrl-C = land, twice = motors off
+            (the simulator just pauses)
       \item no scoreboard: the judges count
     \end{itemize}
   \end{columns}

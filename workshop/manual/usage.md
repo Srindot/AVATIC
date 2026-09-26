@@ -194,12 +194,13 @@ first cell: `RUN = '2026-09-25_14-32-07'`.
 It shows, top to bottom:
 
 1. **Your score**, and the balloons of each colour you popped
-2. a **summary**: time to the first pop, highest point, fastest speed, distance flown
+2. a **summary**: time to the first pop, highest point, fastest speed, largest tilt, distance flown
 3. a **map from above**: your flight path over the balloons (× = a pop), the
-   height over time, the distance to each balloon over time
-4. the **tilt** the flight controller reported, against the truth
-5. **your commands** over time
-6. **camera pictures** after arming, just before each pop, and at the end
+   height over time, the distance to the nearest balloon of each colour
+4. **what the camera could see**: when each balloon was in view, and how big
+5. **your commands** over time, with the safety caps
+6. **camera pictures** 2 s after arming, just before each pop, and at the end
+7. **diagnostics**: the tilt and heading the flight controller reported, against the truth
 
 The map uses the drone's **true** position: your controller never gets it,
 but it shows you where the drone really went. More:
@@ -212,17 +213,17 @@ seen**, one after another, and you get an overall report. Judging works the
 same way, with layouts nobody has seen.
 
 ```bash
-python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
+python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 5
 ```
 
 | Option | What it does | Default |
 |---|---|---|
 | `--controller <file>` | the controller to test | `outerloop_controller/my_controller.py` |
-| `--runs <N>` | the number of random layouts | `10` |
+| `--runs <N>` | the number of random layouts | `5` |
 | `--seeds 5,17,301` | these layouts instead of random ones (e.g. repeat your worst one) | |
 | `--timeout <seconds>` | the longest one run may take, in real time | `120` |
 
-- It runs without windows, about 40 s per run (10 runs: about 7 minutes).
+- It runs without windows, about 40 s per run (5 runs: about 3 minutes).
 - **Ctrl-C** stops early; the runs already done are kept.
 - A run where your controller **never arms** counts as **0 points**.
 - The results are saved in `evaluation/sessions/<date>_<time>/`.
@@ -235,24 +236,29 @@ jupyter notebook evaluation/evaluation.ipynb
 
 It starts with your **average score out of 700**, your lowest, middle and
 highest scores, red balloons hit and how often you popped each colour.
-Then every run, and maps of your best and worst flights. More:
+Then the points of every run by colour, the score during the run, every
+run in a table, maps of your best and worst flights, and what the
+camera saw in the worst one. More:
 [evaluation/README.md](../../evaluation/README.md).
 
 ---
 
 ## For your submission
 
-1. your code (`outerloop_controller/`)
-2. `analysis/analysis.ipynb`, **executed** on your best run
-3. `evaluation/evaluation.ipynb`, **executed** on an evaluation of your
-   final controller (at least 10 runs)
-4. a **video**: a screen recording of your best run (Gazebo and RViz)
-5. a **report** explaining your outer-loop idea
+Everything goes in `output/`; the full list and the video and report
+requirements are in [DELIVERABLES.md](../../DELIVERABLES.md). In short:
 
-Save an executed notebook from a terminal:
+1. your code, your best run and its analysis notebook (executed)
+2. an evaluation of your final controller (at least 5 runs) and its
+   notebook (executed)
+3. a **video**: a screen recording of your best run (Gazebo and RViz)
+4. a **technical report** (PDF): approach, results, analysis, failure cases
+
+One command collects items 1 and 2, runs the fair-play code check and
+lists what is missing:
 
 ```bash
-jupyter nbconvert --to notebook --execute --inplace analysis/analysis.ipynb
+python3 output/collect.py
 ```
 
 ## The real drone

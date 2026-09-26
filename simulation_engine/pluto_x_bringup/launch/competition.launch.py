@@ -88,9 +88,22 @@ def _controller(context):
     pythonpath = os.pathsep.join(
         p for p in (os.path.join(_repo_root(), 'outerloop_controller'),
                     os.environ.get('PYTHONPATH', '')) if p)
+    # the fair-play monitor finds the controller (and anything it starts) by
+    # this token in its environment
     return [ExecuteProcess(
         cmd=[sys.executable, path], name='controller', output='screen',
-        emulate_tty=True, additional_env={'PYTHONUNBUFFERED': '1', 'PYTHONPATH': pythonpath})]
+        emulate_tty=True, additional_env={'PYTHONUNBUFFERED': '1', 'PYTHONPATH': pythonpath,
+                                          'AVATIC_RUN_TOKEN': _run_token(context)})]
+
+
+def _run_token(context):
+    """A random token per launch, shared by the controller and the monitor."""
+    token = context.launch_configurations.get('_avatic_run_token')
+    if not token:
+        import secrets
+        token = secrets.token_hex(12)
+        context.launch_configurations['_avatic_run_token'] = token
+    return token
 
 
 def _seed_file():
@@ -140,8 +153,13 @@ def _setup(context):
     root = LaunchConfiguration('record_dir').perform(context) or \
         os.path.join(_repo_root(), 'analysis', 'runs')
     run_name = LaunchConfiguration('run_name').perform(context)
-    run_dir = _new_run_dir(os.path.abspath(root), run_name) if record else \
-        tempfile.mkdtemp(prefix='pluto_run_')
+    if record:
+        run_dir = _new_run_dir(os.path.abspath(root), run_name)
+    else:   # not kept: removed when the launch ends
+        import atexit
+        import shutil
+        run_dir = tempfile.mkdtemp(prefix='pluto_run_')
+        atexit.register(shutil.rmtree, run_dir, ignore_errors=True)
 
     # the arena of this run, generated into the run directory
     gazebo = get_package_share_directory('pluto_x_gazebo')
@@ -190,6 +208,21 @@ def _setup(context):
             'result_file': LaunchConfiguration('result_file').perform(context) or
             os.path.join(run_dir, 'result_arena.yaml'),
         }.items())]
+    # the fair-play check of the running controller (integrity_monitor.py)
+    organiser = ['arena_bridge', 'arena_scoreboard', 'fc_link', 'ros_gz_bridge', 'ros_gz_sim']
+    if record:
+        organiser.append('run_recorder')
+    if LaunchConfiguration('rviz').perform(context).lower() == 'true':
+        organiser += ['rviz', 'rviz2', 'transform_listener_impl_*']
+    if LaunchConfiguration('msp_bridge').perform(context).lower() == 'true':
+        organiser.append('msp_sim_bridge')
+    actions.append(Node(
+        package='pluto_x_bringup', executable='integrity_monitor.py', name='integrity_monitor',
+        output='screen', emulate_tty=True, parameters=[{
+            'use_sim_time': True,
+            'controller_token': _run_token(context) if controller else '',
+            'organiser_nodes': organiser,
+            'watch_paths': [run_dir]}]))
     if record:
         actions.append(Node(
             package='pluto_x_bringup', executable='run_recorder.py', name='run_recorder',

@@ -14,7 +14,7 @@ Camera: H.264 from the camera module, decoded by ffmpeg (video.py).
 Safety caps (the same as the simulator's, avatic_drone.types.SafetyLimits):
 |roll|, |pitch| <= 0.6, |yaw_rate| <= 0.8, throttle <= 0.95; above 2.5 m
 (barometric) the throttle is limited below hover (0.9 x the hover
-estimate, itself at most 0.8; 0.4 in altitude hold) so the drone descends.
+estimate, itself at most 0.8) so the drone descends.
 
 Differences from the simulator (intentional):
   * time() is the host's monotonic clock (seconds since connecting);
@@ -73,7 +73,6 @@ LAND_CAP_RAMP_PER_S = (0.06, 0.2)  # ramping down slowly, then fast once
 LAND_CAP_FAST_BELOW = 0.15     # the cap is this far below hover (on the ground by then)
 LAND_DISARM_THROTTLE = 0.35    # disarm when the cap is below this (cannot fly)
 LAND_HARD_LIMIT_S = 30.0       # disarm after this long whatever happens
-CEILING_THROTTLE_ALT_HOLD = 0.4  # above the ceiling in altitude hold: 1400 us = -25 cm/s
 CEILING_HOVER_FRACTION = 0.9     # above the ceiling otherwise: 0.9 x the hover estimate,
 CEILING_HOVER_MAX = 0.8          # ... the estimate capped (a climbing controller inflates it)
 FLYING_THROTTLE = 0.3          # failsafe: above this the drone is assumed airborne
@@ -84,7 +83,7 @@ ARM_TIMEOUT_S = 5.0
 CENTRE_US, HALF_RANGE_US = 1500, 500
 THROTTLE_MIN_US, THROTTLE_RANGE_US = 1000, 1000
 ARM_ON_US, ARM_OFF_US = 1500, 1000       # AUX4
-BARO_ON_US, BARO_OFF_US = 1500, 1000     # AUX3
+BARO_OFF_US = 1000                       # AUX3: the firmware's altitude hold, always off
 AUX1_NEUTRAL_US, AUX2_NEUTRAL_US = 2000, 1000
 
 
@@ -99,7 +98,7 @@ def _to_channels(command: Command, arm: bool) -> List[int]:
             round(THROTTLE_MIN_US + THROTTLE_RANGE_US * _clip(command.throttle, 0, 1)),
             round(CENTRE_US + HALF_RANGE_US * _clip(command.yaw_rate, -1, 1)),
             AUX1_NEUTRAL_US, AUX2_NEUTRAL_US,
-            BARO_ON_US if command.altitude_hold else BARO_OFF_US,
+            BARO_OFF_US,
             ARM_ON_US if arm else ARM_OFF_US]
 
 
@@ -111,6 +110,7 @@ class HardwareDrone:
                  connect_timeout_s: float = 10.0):
         self.closed = False
         self._t0 = time.monotonic()
+        self._last_good = {}          # MSP command -> (time, last decoded reply)
         self._lock = threading.RLock()
         self._land_lock = threading.Lock()   # one landing at a time
         self._command = Command()
@@ -121,7 +121,6 @@ class HardwareDrone:
         self._landing = False
         self._armed_at: Optional[float] = None
         self._time_limit_s = time_limit_s
-        self._baro_bit: Optional[int] = None
         self._stop = threading.Event()
         self._warned_stale = False
         self._warned_caps = set()
@@ -144,7 +143,6 @@ class HardwareDrone:
                              threading.Thread(target=self._telemetry_loop, daemon=True)]
             for thread in self._threads:
                 thread.start()
-            self._resolve_boxes()
             deadline = time.monotonic() + connect_timeout_s
             while self.get_telemetry() is None:
                 if time.monotonic() > deadline:
@@ -166,19 +164,6 @@ class HardwareDrone:
 
     # ------------------------------------------------------------ internals
 
-    def _resolve_boxes(self):
-        """Finds the BARO mode's bit in MSP_STATUS (ARM is always bit 0)."""
-        sent = time.monotonic()
-        self._link.request(msp.MSP_BOXIDS)
-        frame = self._link.wait_for(msp.MSP_BOXIDS, sent, 2.0)
-        if frame and not frame.is_error:
-            ids = msp.decode_boxids(frame.payload)
-            if msp.BOX_BARO in ids:
-                self._baro_bit = ids.index(msp.BOX_BARO)
-        if self._baro_bit is None:
-            print('[hitl] WARNING: no MSP_BOXIDS reply: telemetry.altitude_hold will read False',
-                  flush=True)
-
     def _command_loop(self):
         period = 1.0 / COMMAND_RATE_HZ
         next_t = time.monotonic()
@@ -193,7 +178,7 @@ class HardwareDrone:
                 elif (arm and not self._landing and self._last_command_s is not None
                         and now - self._last_command_s > COMMAND_TIMEOUT_S):
                     command = self._failsafe_command(command, altitude_m)
-                elif (arm and not command.altitude_hold and not self._landing
+                elif (arm and not self._landing
                       and altitude_m is not None
                       and AIRBORNE_ALT_M < altitude_m <= SAFETY_LIMITS.max_altitude_m):
                     # running average of the throttle sent while flying: ~hover
@@ -205,13 +190,12 @@ class HardwareDrone:
             # the drone descends. Not by engaging altitude hold: the firmware
             # enters it assuming hover at 1500 us (altitudehold.cpp:283),
             # which drops the simulated drone (docs/architecture.md finding 7)
-            ceiling = (CEILING_THROTTLE_ALT_HOLD if command.altitude_hold else
-                       CEILING_HOVER_FRACTION * min(self._hover_estimate, CEILING_HOVER_MAX))
+            ceiling = CEILING_HOVER_FRACTION * min(self._hover_estimate, CEILING_HOVER_MAX)
             if (arm and altitude_m is not None and not self._landing
                     and altitude_m > SAFETY_LIMITS.max_altitude_m
                     and command.throttle > ceiling):
                 command = Command(command.roll, command.pitch, command.yaw_rate,
-                                  ceiling, command.altitude_hold)
+                                  ceiling)
                 if 'ceiling' not in self._warned_caps:
                     self._warned_caps.add('ceiling')
                     print(f'[hitl] above the {SAFETY_LIMITS.max_altitude_m} m safety ceiling: '
@@ -264,9 +248,7 @@ class HardwareDrone:
     def _failsafe_command(self, last: Command, altitude_m: Optional[float] = None) -> Command:
         """No send_command() for COMMAND_TIMEOUT_S: what to stream instead."""
         airborne = last.throttle > FLYING_THROTTLE or (altitude_m is not None and altitude_m > 0.3)
-        if last.altitude_hold:
-            safe, what = Command(throttle=0.5, altitude_hold=True), 'altitude hold'
-        elif airborne:
+        if airborne:
             safe = Command(throttle=_clip(self._hover_estimate, *FAILSAFE_THROTTLE_RANGE))
             what = f'throttle {safe.throttle:.2f} (estimated hover)'
         else:
@@ -283,13 +265,16 @@ class HardwareDrone:
         return time.monotonic() - entry[0] if entry else float('inf')
 
     def _decoded(self, cmd, decoder):
+        """(time, decoded) of the latest reply to cmd; after an error or a
+        damaged reply, the last good one (so telemetry never goes back to
+        None mid-run, as in the simulator)."""
         entry = self._link.latest(cmd)
-        if entry is None or entry[1].is_error:
-            return None, None
-        try:
-            return entry[0], decoder(entry[1].payload)
-        except ValueError:
-            return None, None
+        if entry is not None and not entry[1].is_error:
+            try:
+                self._last_good[cmd] = (entry[0], decoder(entry[1].payload))
+            except ValueError:
+                pass
+        return self._last_good.get(cmd, (None, None))
 
     def _on_sigint(self, signum, frame):
         # no locks here: a signal handler can run inside any `with self._lock`
@@ -320,16 +305,13 @@ class HardwareDrone:
         _, analog = self._decoded(msp.MSP_ANALOG, msp.decode_analog)
         if status is None or attitude is None or altitude is None or analog is None:
             return None
-        altitude_hold = (self._baro_bit is not None and
-                         bool(status.mode_flags >> self._baro_bit & 1))
         return Telemetry(time_s=t_status - self._t0, armed=status.armed,
                          ready_to_arm=status.ok_to_arm,
                          roll_deg=attitude.roll_decideg * 0.1,
                          pitch_deg=-attitude.pitch_decideg * 0.1,  # firmware: nose down +
                          heading_deg=float(attitude.heading_deg),
                          altitude_m=altitude.altitude_cm * 0.01,
-                         battery_v=analog.battery_mv * 0.001,
-                         altitude_hold=altitude_hold)
+                         battery_v=analog.battery_mv * 0.001)
 
     def flags(self) -> dict:
         """Pluto status flags (crash, low battery, signal loss, ...)."""
@@ -357,12 +339,12 @@ class HardwareDrone:
     # -------------------------------------------------------------- outputs
 
     def send_command(self, roll: float = 0.0, pitch: float = 0.0, yaw_rate: float = 0.0,
-                     throttle: float = 0.0, altitude_hold: bool = False) -> None:
+                     throttle: float = 0.0) -> None:
         for name, value in (('roll', roll), ('pitch', pitch), ('yaw_rate', yaw_rate),
                             ('throttle', throttle)):
             if not math.isfinite(value):
                 raise ValueError(f'{name} must be a finite number, got {value}')
-        safe, capped = apply_safety_limits(Command(roll, pitch, yaw_rate, throttle, altitude_hold))
+        safe, capped = apply_safety_limits(Command(roll, pitch, yaw_rate, throttle))
         for name in capped:
             if name not in self._warned_caps:
                 self._warned_caps.add(name)
@@ -378,8 +360,7 @@ class HardwareDrone:
     def send(self, command: Command) -> None:
         if not isinstance(command, Command):
             raise TypeError(f'send() needs a Command, got {type(command).__name__}')
-        self.send_command(command.roll, command.pitch, command.yaw_rate, command.throttle,
-                          command.altitude_hold)
+        self.send_command(command.roll, command.pitch, command.yaw_rate, command.throttle)
 
     # --------------------------------------------------------------- arming
 

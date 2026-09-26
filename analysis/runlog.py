@@ -247,6 +247,31 @@ def _rules_lines(check: dict):
             f"NOT AN OFFICIAL RUN: {'; '.join(check['problems'])}")
 
 
+def fair_play(run: Run) -> dict:
+    """The fair-play check of the running controller (integrity_monitor.py):
+    {'verdict': 'clean' | 'flagged' | 'not checked', 'flags': [text], 'notes': [text]}."""
+    data = run.meta.get('integrity') or {}
+    return {'verdict': data.get('verdict', 'not checked'),
+            'flags': [f.get('text', str(f)) if isinstance(f, dict) else str(f)
+                      for f in data.get('flags', [])],
+            'notes': [n.get('text', str(n)) if isinstance(n, dict) else str(n)
+                      for n in data.get('notes', [])]}
+
+
+def _fair_play_lines(check: dict):
+    """(markdown line, text line) describing the fair-play check of a run."""
+    if check['verdict'] == 'flagged':
+        flags = '; '.join(check['flags'])
+        return (f'> **FLAGGED BY THE FAIR-PLAY CHECK:** {flags}. The controller may only use '
+                'the camera and the telemetry; an organiser reviews flagged runs before they '
+                'count.', f'FLAGGED BY THE FAIR-PLAY CHECK: {flags}')
+    if check['verdict'] == 'clean':
+        extra = f" (note: {'; '.join(check['notes'])})" if check['notes'] else ''
+        return (f'**Fair play:** clean, no access to the simulator\'s ground truth seen{extra}.',
+                f'fair play: clean{extra}')
+    return '**Fair play:** not checked in this run.', 'fair play: not checked'
+
+
 def objective(run: Run) -> dict:
     """What the run is judged on: the score, and the balloons per colour."""
     r = run.result or {}
@@ -295,14 +320,15 @@ def show_objective(run: Run) -> None:
         each = '' if c['points_each'] is None else f"{c['points_each']:+d}"
         rows.append((colour, each, f"{c['popped']} / {c['total']}", f"{c['points']:+d}"))
     rules_md, rules_text = _rules_lines(rules_check(run))
-    md = [f"## Score: **{score}** / {best}{warn}", '', rules_md, '',
+    fair_md, fair_text = _fair_play_lines(fair_play(run))
+    md = [f"## Score: **{score}** / {best}{warn}", '', rules_md, '', fair_md, '',
           f"run `{run.run_id}`, seed {o['seed']}", '',
           '| balloon | points each | popped | points |', '|---|---|---|---|']
     md += [f'| {c} | {e} | {p} | {pts} |' for c, e, p, pts in rows]
     md += ['', f"**Red balloons hit: {o['red_hits']}**" + ('' if o['red_hits'] else ' (good)'),
            f"pops at {o['pop_times_after_arm_s']} s after arming" if o['pop_times_after_arm_s']
            else 'no balloon popped']
-    text = [f"SCORE {score} / {best}{warn}", rules_text, f"run {run.run_id}, seed {o['seed']}"]
+    text = [f"SCORE {score} / {best}{warn}", rules_text, fair_text, f"run {run.run_id}, seed {o['seed']}"]
     text += [f'  {c:<7}{e:>5}  popped {p:<6} {pts:>5}' for c, e, p, pts in rows]
     text += [f"  red hits: {o['red_hits']}", f"  pop times after arming: {o['pop_times_after_arm_s']}"]
     _show('\n'.join(md), '\n'.join(text))
@@ -359,10 +385,17 @@ def plot_map(run: Run, ax=None):
         ax.plot(tr['x_enu_m'][0], tr['y_enu_m'][0], 'k^', ms=8, label='take-off')
         for p in run.pops():
             ax.plot(*p['position'][:2], 'x', color=COLOURS.get(p['colour'], 'k'), ms=12, mew=3)
+        t_arm = run.arm_time_s
+        if t_arm is not None:   # where it was every 5 s of the run
+            for dt in np.arange(5.0, float(tr['t_s'][-1]) - t_arm + 1e-6, 5.0):
+                x, y, _ = run.position_at(t_arm + dt)
+                ax.plot(x, y, 'o', color='k', ms=4)
+                ax.annotate(f'{dt:.0f} s', (x, y), textcoords='offset points', xytext=(-6, -12),
+                            fontsize=7, color='0.3')
     ax.set_aspect('equal')
     ax.set_xlabel('x east [m]')
     ax.set_ylabel('y north [m]')
-    ax.set_title('top view (ground truth); x = pop')
+    ax.set_title('top view (ground truth); x = pop, dots = every 5 s after arming')
     ax.grid(alpha=0.3)
     ax.legend(loc='lower left', fontsize=8)
     return ax
@@ -376,12 +409,14 @@ def plot_altitude(run: Run, ax=None):
         ax.plot(tr['t_s'], tr['z_enu_m'], label='true height')
     if te:
         ax.plot(te['t_s'], te['altitude_m'], label='baro altitude (telemetry)', alpha=0.8)
-    for b in run.balloons:
-        if b['points'] > 0:
-            ax.axhline(b['position'][2], color=COLOURS[b['colour']], lw=0.6, alpha=0.5)
+    heights = [b['position'][2] for b in run.balloons]
+    if heights:
+        r = _balloon_diameter(run) / 2
+        ax.axhspan(min(heights) - r, max(heights) + r, color='0.85', alpha=0.5, lw=0,
+                   label='balloon heights')
     _mark_events(ax, run)
     ax.set_ylabel('height [m]')
-    ax.set_title('altitude (dashed = armed, coloured = pops; thin lines = balloon heights)')
+    ax.set_title('altitude (dashed = armed, coloured lines = pops)')
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
     return ax
@@ -423,8 +458,14 @@ def plot_commands(run: Run, axes=None):
             axes[0].plot(c['t_s'], c[name], label=name)
         axes[1].plot(c['t_s'], c['throttle'], label='throttle', color='tab:red')
         axes[1].plot(c['t_s'], c['arm_switch'], label='arm switch', color='0.5', lw=0.8)
+    # the safety caps (avatic_drone SAFETY_LIMITS): a flat line on one = clipped
+    for level, colour in ((0.6, 'tab:orange'), (0.8, 'tab:green')):
+        for sign in (1, -1):
+            axes[0].axhline(sign * level, color=colour, lw=0.7, ls=':')
+    axes[1].axhline(0.95, color='tab:red', lw=0.7, ls=':')
     axes[0].set_ylabel('stick [-1..1]')
-    axes[0].set_title('commands that reached the drone (your controller + failsafe)')
+    axes[0].set_title('commands that reached the drone (your controller + failsafe); '
+                      'dotted = safety caps (tilt 0.6, yaw 0.8, throttle 0.95)')
     axes[1].set_ylabel('throttle [0..1]')
     axes[1].set_xlabel('simulation time [s]')
     for ax in axes:
@@ -435,26 +476,150 @@ def plot_commands(run: Run, axes=None):
 
 
 def plot_balloon_distances(run: Run, ax=None):
-    """Distance from the drone to every balloon over time."""
+    """Distance from the drone to the nearest balloon of each colour (not yet
+    popped) over time: how close it came to targets, and to red ones."""
     plt = _plt()
     ax = ax or plt.gca()
     tr = run.trajectory
     if not tr:
         return ax
     p = np.stack([tr['x_enu_m'], tr['y_enu_m'], tr['z_enu_m']], axis=1)
-    for b in run.balloons:
-        d = np.linalg.norm(p - b['position'], axis=1)
-        ax.plot(tr['t_s'], d, color=COLOURS[b['colour']], ls='-' if b['points'] > 0 else ':',
-                label=f"{b['name']} ({b['points']:+d})")
+    popped_at = balloon_pop_times(run)
+    for colour in BALLOON_COLOURS:
+        here = [b for b in run.balloons if b['colour'] == colour]
+        if not here:
+            continue
+        d = np.full(len(p), np.inf)
+        for b in here:
+            db = np.linalg.norm(p - b['position'], axis=1)
+            db[tr['t_s'] >= popped_at.get(b['name'], np.inf)] = np.inf   # gone once popped
+            d = np.minimum(d, db)
+        d[~np.isfinite(d)] = np.nan
+        points = here[0]['points']
+        ax.plot(tr['t_s'], d, color=COLOURS[colour], ls='-' if points > 0 else ':',
+                lw=2 if points < 0 else 1.5, label=f'nearest {colour} ({points:+d})')
     reach = _pop_distance(run)
     ax.axhline(reach, color='k', lw=0.8, ls='--')
-    ax.text(ax.get_xlim()[0], reach + 0.02, ' max pop distance', fontsize=8)
+    ax.text(ax.get_xlim()[0], reach + 0.03, ' pop distance', fontsize=8)
     _mark_events(ax, run)
     ax.set_ylabel('distance [m]')
     ax.set_xlabel('simulation time [s]')
-    ax.set_title('distance to each balloon (dotted = red, a penalty)')
-    ax.legend(fontsize=7, ncol=2)
+    ax.set_title('distance to the nearest balloon of each colour (dotted = red, a penalty)')
+    ax.legend(fontsize=8, ncol=2)
     ax.grid(alpha=0.3)
+    return ax
+
+
+def balloon_pop_times(run: Run) -> Dict[str, float]:
+    """{balloon name: simulation time it was popped}, from the pop events."""
+    out = {}
+    ev = run.events
+    for t, kind, text in zip(ev.get('t_s', []), ev.get('kind', []), ev.get('text', [])):
+        if kind == 'pop' and '(' in str(text):
+            out[str(text).split('(', 1)[1].split(',')[0].strip()] = float(t)
+    return out
+
+
+# ------------------------------------------------------- camera visibility
+
+CAMERA_DEFAULTS = {'width_px': 1280, 'height_px': 720, 'horizontal_fov_deg': 80.0,
+                   'position_flu_m': {'x': 0.035, 'y': 0.0, 'z': -0.018}, 'tilt_down_deg': 0.0}
+
+
+def camera_model(run: Run) -> dict:
+    """The camera of the run's vehicle (its vehicle config, else the defaults)."""
+    camera = dict(CAMERA_DEFAULTS)
+    data = _load_yaml(run.meta.get('vehicle_config') or '') or {}
+    camera.update({k: v for k, v in (data.get('camera') or {}).items() if k in camera})
+    return camera
+
+
+def _rotation(roll, pitch, yaw):
+    """Body (FLU) -> world (ENU) rotation matrices, one per sample (REP-103)."""
+    cr, sr, cp, sp, cy, sy = (np.cos(roll), np.sin(roll), np.cos(pitch), np.sin(pitch),
+                              np.cos(yaw), np.sin(yaw))
+    return np.stack([
+        np.stack([cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr], -1),
+        np.stack([sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr], -1),
+        np.stack([-sp, cp * sr, cp * cr], -1)], -2)
+
+
+def balloon_visibility(run: Run, rate_hz: float = 10.0) -> dict:
+    """When each balloon was inside the camera's view, and how big it looked.
+
+    From the ground truth and the camera model (field of view, mount); it
+    ignores balloons hiding behind others. Returns {'t_s': times, name:
+    apparent diameter in pixels (NaN = not in view, or already popped)}."""
+    tr = run.trajectory
+    if not tr or 't_s' not in tr or not len(tr['t_s']):
+        return {}
+    t_all = tr['t_s']
+    t = np.arange(t_all[0], t_all[-1], 1.0 / rate_hz)
+    idx = np.clip(np.searchsorted(t_all, t), 0, len(t_all) - 1)
+    pos = np.stack([tr['x_enu_m'][idx], tr['y_enu_m'][idx], tr['z_enu_m'][idx]], axis=1)
+    rot = _rotation(tr['roll_rad'][idx], tr['pitch_rad'][idx], tr['yaw_rad'][idx])
+    cam = camera_model(run)
+    mount = np.array([cam['position_flu_m'][k] for k in ('x', 'y', 'z')], dtype=float)
+    tilt = np.radians(float(cam['tilt_down_deg']))
+    # the optical frame: the body frame pitched down by the tilt
+    to_cam = np.array([[np.cos(tilt), 0.0, -np.sin(tilt)], [0.0, 1.0, 0.0],
+                       [np.sin(tilt), 0.0, np.cos(tilt)]])
+    half_h = np.radians(float(cam['horizontal_fov_deg'])) / 2
+    half_v = np.arctan(np.tan(half_h) * cam['height_px'] / cam['width_px'])
+    focal = cam['width_px'] / 2 / np.tan(half_h)
+    lens = pos + np.einsum('nij,j->ni', rot, mount)
+    popped_at = balloon_pop_times(run)
+    out = {'t_s': t}
+    for b in run.balloons:
+        body = np.einsum('nji,nj->ni', rot, b['position'] - lens)   # world -> body
+        c = body @ to_cam.T
+        dist = np.linalg.norm(c, axis=1)
+        forward = c[:, 0] > 0.05
+        with np.errstate(divide='ignore', invalid='ignore'):
+            inside = forward & (np.abs(np.arctan2(c[:, 1], c[:, 0])) <= half_h) & \
+                (np.abs(np.arctan2(c[:, 2], c[:, 0])) <= half_v)
+            size = focal * _balloon_diameter(run) / dist
+        size[~inside | (t >= popped_at.get(b['name'], np.inf))] = np.nan
+        out[b['name']] = size
+    return out
+
+
+def plot_visibility(run: Run, ax=None):
+    """Timeline: which balloons were in the camera's view, and how big.
+
+    One row per balloon; the bar is drawn while the balloon was in view,
+    thicker the bigger it looked. x = popped. A good balloon in view for a
+    long time and never chased is a missed chance."""
+    plt = _plt()
+    vis = balloon_visibility(run)
+    order = sorted(run.balloons, key=lambda b: (-b['points'], b['name']))
+    if ax is None:
+        _, ax = plt.subplots(figsize=(12, 0.28 * len(order) + 1.2))
+    if not vis:
+        ax.set_title('no trajectory recorded')
+        return ax
+    t = vis['t_s']
+    dt = t[1] - t[0] if len(t) > 1 else 0.1
+    popped_at = balloon_pop_times(run)
+    for row, b in enumerate(order):
+        size = vis[b['name']]
+        seen = np.isfinite(size)
+        if seen.any():
+            # bar height grows with the apparent size (30 px thin ... 300 px full)
+            h = np.clip(np.nan_to_num(size) / 300.0, 0.15, 0.9)
+            ax.bar(t[seen], h[seen], width=dt, bottom=row - h[seen] / 2, align='edge',
+                   color=COLOURS[b['colour']], lw=0)
+        if b['name'] in popped_at:
+            ax.plot(popped_at[b['name']], row, 'kx', ms=9, mew=2)
+    _mark_events(ax, run)
+    ax.set_yticks(range(len(order)))
+    ax.set_yticklabels([f"{b['colour']} {b['points']:+d}" for b in order], fontsize=7)
+    ax.set_ylim(len(order) - 0.5, -0.5)
+    ax.set_xlim(t[0], t[-1])
+    ax.set_xlabel('simulation time [s]')
+    ax.set_title('balloons in the camera\'s view (thicker = looked bigger; x = popped; '
+                 'from the ground truth, ignores balloons hidden behind others)')
+    ax.grid(alpha=0.3, axis='x')
     return ax
 
 
@@ -497,11 +662,12 @@ def frame_at(run: Run, t_s: float) -> Optional[np.ndarray]:
 
 
 def key_times(run: Run) -> List[tuple]:
-    """(label, time) moments worth looking at: arm, before each pop, end."""
+    """(label, time) moments worth looking at: just after take-off, before
+    each pop, the end."""
     times = []
     t_arm = run.arm_time_s
     if t_arm is not None:
-        times.append(('armed', t_arm + 0.1))
+        times.append(('2 s after arming', t_arm + 2.0))
     for p in run.pops():
         times.append((f"0.5 s before {p['colour']} pop", p['t_s'] - 0.5))
     end = run.end_time_s

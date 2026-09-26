@@ -28,18 +28,15 @@ class Command:
 
     roll, pitch in -1..1 are ANGLE setpoints (+roll = bank right, +pitch =
     nose down / forward); yaw_rate in -1..1 is a turn RATE (+ = clockwise);
-    throttle in 0..1 (hover ~0.76). altitude_hold engages the firmware's
-    barometric altitude hold (then throttle ~0.5 = hold, above = climb).
-    WARNING: in the simulator, engaging altitude hold in flight makes the
-    drone drop (the firmware assumes hover at throttle 0.5, the simulated
-    drone needs ~0.76; docs/architecture.md firmware finding 7). Fly with
-    your own altitude loop (altitude_hold=False) until this is resolved.
+    throttle in 0..1 is the total thrust (hover ~0.76): your code holds the
+    height (the template shows how). Fields left out are 0, including the
+    throttle. (The firmware's altitude hold is deliberately not offered:
+    docs/architecture.md, firmware finding 7.)
     """
     roll: float = 0.0
     pitch: float = 0.0
     yaw_rate: float = 0.0
     throttle: float = 0.0
-    altitude_hold: bool = False
 
 
 @dataclass(frozen=True)
@@ -57,7 +54,6 @@ class Telemetry:
     heading_deg: float
     altitude_m: float
     battery_v: float
-    altitude_hold: bool
 
 
 @dataclass
@@ -104,5 +100,5 @@ def apply_safety_limits(command: 'Command', limits: SafetyLimits = SAFETY_LIMITS
     return Command(roll=cap('tilt', command.roll, limits.max_tilt_stick),
                    pitch=cap('tilt', command.pitch, limits.max_tilt_stick),
                    yaw_rate=cap('yaw rate', command.yaw_rate, limits.max_yaw_rate_stick),
-                   throttle=cap('throttle', command.throttle, limits.max_throttle, low=0.0),
-                   altitude_hold=command.altitude_hold), sorted(set(capped))
+                   throttle=cap('throttle', command.throttle, limits.max_throttle, low=0.0)), \
+        sorted(set(capped))

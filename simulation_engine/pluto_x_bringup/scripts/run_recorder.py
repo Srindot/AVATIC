@@ -4,7 +4,8 @@
 Started by competition.launch.py (record:=true, the default). Files, all
 in <run_dir>/ (plain CSV / YAML / MP4, read by analysis/runlog.py):
 
-  meta.yaml        seed, controller, time limit, start time, files, status
+  meta.yaml        seed, controller, time limit, start time, files, status,
+                   integrity (the fair-play check: integrity_monitor.py)
   layout.yaml      the arena used (balloon positions, colours, points)
   trajectory.csv   GROUND TRUTH (judges' view; the controller never sees it):
                    t_s, x/y/z_enu_m, vx/vy/vz_enu_m_s (world), roll/pitch/yaw
@@ -39,7 +40,8 @@ import rclpy.executors
 import yaml
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, qos_profile_sensor_data
+from rclpy.qos import (DurabilityPolicy, QoSProfile, ReliabilityPolicy,
+                       qos_profile_sensor_data)
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -114,6 +116,10 @@ class RunRecorder(Node):
         self.create_subscription(String, '/arena/result', self.on_result, qos)
         self.create_subscription(Image, '/pluto/camera/image_raw', self.on_image,
                                  qos_profile_sensor_data)
+        self.integrity = None
+        self.create_subscription(String, '/arena/integrity', self.on_integrity, QoSProfile(
+            depth=1, reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.get_logger().info(f'recording this run to {self.run_dir}')
 
     def _open(self, name, header):
@@ -183,6 +189,9 @@ class RunRecorder(Node):
         self.writers['events'].writerow([f'{t:.3f}', kind, colour, points, total, text])
         self.files['events'].flush()
 
+    def on_integrity(self, m):
+        self.integrity = yaml.safe_load(m.data)
+
     def on_result(self, m):
         if self.finished:
             return
@@ -247,6 +256,7 @@ class RunRecorder(Node):
             except (OSError, subprocess.TimeoutExpired, KeyboardInterrupt):
                 self.video.kill()   # a second Ctrl-C: still write meta.yaml below
         self.meta['camera_frames'] = self.video_frames
+        self.meta['integrity'] = self.integrity or {'verdict': 'not checked'}
         self.meta['finished_local_time'] = datetime.now().isoformat(timespec='seconds')
         self._write_meta()
 

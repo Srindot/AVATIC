@@ -14,6 +14,7 @@ not known on this link) and a sequence number.
 
 from __future__ import annotations
 
+import dataclasses
 import re
 import shutil
 import socket
@@ -140,7 +141,9 @@ class VideoStream:
             print(f'[hitl] CAMERA: {self.error} - get_frame() returns the last frame',
                   flush=True)
         with self._lock:
-            return self._latest
+            latest = self._latest
+        # an own, writable copy, as in the simulator (drawing on it is safe)
+        return None if latest is None else dataclasses.replace(latest, image=latest.image.copy())
 
     def close(self):
         self._stop.set()

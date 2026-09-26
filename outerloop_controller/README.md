@@ -50,7 +50,7 @@ def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 25)
 25 s from arming, 18 balloons. The best possible score is 700.
 
 **Remember:** keep the throttle smooth and above about 0.5 in the air,
-don't use `altitude_hold`, and keep your files in this folder.
+control the height yourself with the throttle, and keep your files in this folder.
 
 On the real drone: `python3 outerloop_controller/my_controller.py --hardware`
 ([guide page 7](../docs/participants/7_real_drone.md)).
