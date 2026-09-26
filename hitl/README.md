@@ -83,7 +83,7 @@ buffer bytes. Our client sends two.
   firmware finding 5): after that the ceiling is offset by the height at
   the reset. Fly in a net or a room with a ceiling-height margin on the
   first sessions.
-- **End of run** (15 s from arming): the backend starts landing by itself,
+- **End of run** (25 s from arming, the official limit): the backend starts landing by itself,
   even if the script never calls `close()`; `close()`, the end of the
   script (`atexit`), Ctrl-C, closing the terminal (SIGHUP) or `kill`
   (SIGTERM) land too.
@@ -116,7 +116,7 @@ buffer bytes. Our client sends two.
   firmware's own signal-loss failsafe takes over (unverified on the bench:
   check it).
 - **Camera frames** are writable NumPy copies (the same as the simulator).
-- **No scoring on hardware:** `drone.arena()` is a local 15 s run timer
+- **No scoring on hardware:** `drone.arena()` is a local 25 s run timer
   only; the judges count the balloons.
 
 ## Testing without the drone: the MSP bridge
@@ -146,7 +146,7 @@ Result on 2026-09-25:
 | Video: H.264 over TCP → ffmpeg → NumPy | 1280 × 720, about 19 frames/s |
 | `yaw_rate +0.3` for 1 s | +21° clockwise |
 | Land at end of run | steady 0.25–0.3 m/s descent, touchdown, then disarm |
-| `my_controller.py --hardware` (the unchanged template) | connects, arms, flies 15 s, lands, exits 0 |
+| `my_controller.py --hardware` (the unchanged template) | connects, arms, flies the run, lands, exits 0 |
 
 MSP codec unit tests: `python3 -m pytest hitl/tests`.
 

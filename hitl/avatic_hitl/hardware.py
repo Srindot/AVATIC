@@ -107,7 +107,7 @@ class HardwareDrone:
     """Connection to a real Pluto X over MSP (see the module docstring)."""
 
     def __init__(self, host: str = '192.168.0.1', msp_port: int = 9060,
-                 video: Optional[str] = 'plutocam', time_limit_s: float = 15.0,
+                 video: Optional[str] = 'plutocam', time_limit_s: float = 25.0,
                  connect_timeout_s: float = 10.0):
         self.closed = False
         self._t0 = time.monotonic()

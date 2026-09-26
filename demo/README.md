@@ -14,7 +14,7 @@ ros2 launch pluto_x_demo balloon_demo.launch.py
 - **RViz** shows the drone's camera, the live score and time left, and the
   flight path.
 
-Competition length (15 s: blue → green, 150 points):
+A short 15 s route (blue → green, 150 points):
 
 ```bash
 ros2 launch pluto_x_demo balloon_demo.launch.py time_limit_s:=15 route_file:=$(ros2 pkg prefix pluto_x_demo)/share/pluto_x_demo/config/balloon_demo_15s.yaml

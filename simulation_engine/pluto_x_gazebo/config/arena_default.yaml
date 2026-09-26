@@ -10,8 +10,8 @@
 # which colour are random, from the seed) and this time limit; the analysis
 # and evaluation notebooks show them and flag any run that differs.
 competition:
-  time_limit_s: 15.0                 # from arming
-  balloon_counts: {green: 2, blue: 3, yellow: 4, red: 3}
+  time_limit_s: 25.0                 # from arming
+  balloon_counts: {green: 3, blue: 5, yellow: 6, red: 4}   # 18 balloons, best score 700
 
 # The settings below are for arena.launch.py and the demo (the fixed
 # layout at the end of this file).

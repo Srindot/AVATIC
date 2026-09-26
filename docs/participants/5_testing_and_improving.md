@@ -76,14 +76,14 @@ works on layouts it has never seen. This is how judging works:
 python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
 ```
 
-It runs 10 flights on 10 random layouts, one after another (about 25 s
+It runs 10 flights on 10 random layouts, one after another (about 40 s
 each, no windows), and prints the average score. Then open the report:
 
 ```bash
 jupyter notebook evaluation/evaluation.ipynb
 ```
 
-It starts with your **average score out of 450**, your worst and best runs,
+It starts with your **average score out of 700**, your worst and best runs,
 how many red balloons you hit, and how often you popped each colour. Then
 it shows every run, and maps of your best and worst flights.
 

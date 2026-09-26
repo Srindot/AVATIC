@@ -16,7 +16,7 @@ class MyController:
     def step(self, frame, telemetry, t):
         # frame:     the latest camera image (or None at the very start)
         # telemetry: the flight controller's readings
-        # t:         seconds since arming (0 ... 15)
+        # t:         seconds since arming (0 ... 25)
         ...
         return Command(roll=0.0, pitch=0.0, yaw_rate=0.0, throttle=0.76)
 ```
@@ -132,9 +132,9 @@ The runner uses these; you can also write your own runner. They come from
 |---|---|
 | `drone = Drone()` | connect to the simulator |
 | `drone.wait_until_ready()` | wait until the flight controller is ready (~4 s) |
-| `drone.arm()` | start the motors: **the 15 s clock starts now** |
+| `drone.arm()` | start the motors: **the 25 s clock starts now** |
 | `drone.disarm()` | stop the motors at once (the drone falls if flying) |
-| `drone.running()` | `False` once the 15 s are over |
+| `drone.running()` | `False` once the 25 s are over |
 | `drone.get_frame()`, `drone.get_telemetry()` | the latest picture and readings |
 | `drone.send(command)` or `drone.send_command(roll=..., pitch=..., yaw_rate=..., throttle=...)` | fly |
 | `for step in drone.loop(hz=20): ...` | repeat at a steady rate until the time is up |

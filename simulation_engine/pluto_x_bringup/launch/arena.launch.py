@@ -77,7 +77,7 @@ def _launch_setup(context):
         raise RuntimeError("clock_start must be 'sim_start' or 'armed'")
     if time_limit or clock_start:
         # copy of the arena config with the time limit replaced (the file on
-        # disk, e.g. the 15 s competition default, is not changed)
+        # disk is not changed)
         import yaml
         with open(arena_config, 'r', encoding='utf-8') as stream:
             arena = yaml.safe_load(stream)

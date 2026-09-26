@@ -30,7 +30,7 @@ simulator.
    python3 outerloop_controller/my_controller.py --hardware
    ```
 
-3. The drone arms, and your controller flies it for 15 s.
+3. The drone arms, and your controller flies it for 25 s.
 4. At the end it **lands by itself**, then stops the motors.
 
 **Stopping:**
@@ -50,7 +50,7 @@ simulator.
   your first flight and change `HOVER_THROTTLE`.
 - **Colours** look different under real light: check your colour ranges on
   real pictures.
-- **No scoreboard.** `drone.arena()` only counts the 15 s; the judges count
+- **No scoreboard.** `drone.arena()` only counts the 25 s; the judges count
   the balloons.
 - The same safety limits apply (page 3).
 

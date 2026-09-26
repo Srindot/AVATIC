@@ -41,7 +41,7 @@ class MyController:
     def step(self, frame, telemetry, t):
         # frame:     the camera picture (frame.image: 720 x 1280 x 3, RGB)
         # telemetry: the drone's readings (altitude_m, heading_deg, ...)
-        # t:         seconds since arming (0 ... 15)
+        # t:         seconds since arming (0 ... 25)
         return Command(roll=0.0, pitch=0.0, yaw_rate=0.0, throttle=0.76)
 ```
 
@@ -73,8 +73,8 @@ ros2 launch pluto_x_demo balloon_demo.launch.py
 
 The drone flies a **pre-planned route** and pops all six good balloons of
 its own fixed 8-balloon layout (350 points there; competition layouts have
-12 balloons). It **knows where the balloons are** (your controller does
-not), it flies a fixed layout, and it gets **35 s** instead of 15 s. It is
+18 balloons). It **knows where the balloons are** (your controller does
+not), it flies a fixed layout, and it gets **35 s** instead of 25 s. It is
 there to show what the arena, the balloons and a pop look like: it is not
 a benchmark and not a solution.
 
@@ -82,7 +82,7 @@ a benchmark and not a solution.
 |---|---|---|
 | `headless:=true` | no Gazebo window | `false` |
 | `rviz:=false` | no RViz window | `true` |
-| `time_limit_s:=15` | the competition's time limit instead of 35 s | `35` |
+| `time_limit_s:=25` | the competition's time limit instead of 35 s | `35` |
 
 ---
 
@@ -98,8 +98,8 @@ What happens:
 
 1. Gazebo (the 3-D world) and RViz (the drone's camera and the score) open.
 2. After about 4 s the drone's flight controller is ready and your
-   controller **arms** it. **The 15 s clock starts now.**
-3. At 15 s the simulation **pauses** and the score is printed in the
+   controller **arms** it. **The 25 s clock starts now.**
+3. At 25 s the simulation **pauses** and the score is printed in the
    terminal (and shown in RViz).
 4. Press **Ctrl-C** to stop. Lines like `process has died ... exit code -2`
    after Ctrl-C are normal.
@@ -128,7 +128,7 @@ command.
 | `rviz:=false` | no RViz window | `true` |
 | `arena_seed:=random` | a new random balloon layout, for this run only | `analysis`: the development layout (its seed is in `analysis/seed.yaml`, 42 at first) |
 | `arena_seed:=7` | a specific layout (any whole number) | |
-| `time_limit_s:=30` | a longer run while developing (judging always uses 15) | `15` |
+| `time_limit_s:=40` | a longer run while developing (the run is then marked "not official"; judging always uses 25) | `25` (the official rules) |
 | `record:=false` | do not save this run | `true` |
 | `record_dir:=<folder>` | save runs in this folder instead of `analysis/runs/` | `analysis/runs` |
 | `run_name:=<name>` | name the run folder yourself instead of the date and time | date and time |
@@ -145,8 +145,8 @@ ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controll
 ```
 
 ```bash
-# watch a 30 s run on layout 7
-ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controller/my_controller.py arena_seed:=7 time_limit_s:=30
+# watch a 40 s run on layout 7 (not an official run)
+ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controller/my_controller.py arena_seed:=7 time_limit_s:=40
 ```
 
 ### Options of `my_controller.py`
@@ -222,7 +222,7 @@ python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.p
 | `--seeds 5,17,301` | these layouts instead of random ones (e.g. repeat your worst one) | |
 | `--timeout <seconds>` | the longest one run may take, in real time | `120` |
 
-- It runs without windows, about 25 s per run (10 runs: about 5 minutes).
+- It runs without windows, about 40 s per run (10 runs: about 7 minutes).
 - **Ctrl-C** stops early; the runs already done are kept.
 - A run where your controller **never arms** counts as **0 points**.
 - The results are saved in `evaluation/sessions/<date>_<time>/`.
@@ -233,7 +233,7 @@ Then open the report:
 jupyter notebook evaluation/evaluation.ipynb
 ```
 
-It starts with your **average score out of 450**, your lowest, middle and
+It starts with your **average score out of 700**, your lowest, middle and
 highest scores, red balloons hit and how often you popped each colour.
 Then every run, and maps of your best and worst flights. More:
 [evaluation/README.md](../../evaluation/README.md).

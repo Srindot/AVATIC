@@ -7,14 +7,14 @@ controller's readings**. Pop the good ones, avoid the red ones.
 
 | Balloon | Points | How many |
 |---|---|---|
-| green | **+100** | 2 |
-| blue | **+50** | 3 |
-| yellow | **+25** | 4 |
-| red | **−75**: avoid it | 3 |
+| green | **+100** | 3 |
+| blue | **+50** | 5 |
+| yellow | **+25** | 6 |
+| red | **−75**: avoid it | 4 |
 
-- Best possible score: **450** (all green, blue and yellow, no red).
+- Best possible score: **700** (all green, blue and yellow, no red).
 - The rarest balloons are worth the most. There are more good balloons
-  than anyone can pop in 15 s: you never run out, so choose well.
+  than anyone can pop in 25 s: you never run out, so choose well.
 - The score can go below zero if you hit red balloons.
 - A balloon **pops when any part of the drone touches it.** Balloons do not
   push the drone: it flies straight through, and the balloon disappears.
@@ -22,9 +22,9 @@ controller's readings**. Pop the good ones, avoid the red ones.
 
 ## Time
 
-- You have **15 seconds**, counted **from the moment your controller arms
+- You have **25 seconds**, counted **from the moment your controller arms
   the drone** (starts the motors). Waiting before arming costs nothing.
-- Pops after the 15 s do not count. At 15 s the simulation pauses and the
+- Pops after the 25 s do not count. At 25 s the simulation pauses and the
   result is printed.
 - The template arms as soon as the flight controller is ready (about 4 s
   after the simulator starts).
@@ -32,7 +32,7 @@ controller's readings**. Pop the good ones, avoid the red ones.
 ## The arena
 
 - The drone starts on the ground at the centre, **facing east**.
-- There are 12 balloons: 30 cm wide, 45 cm tall, floating 0.8–2.0 m high
+- There are 18 balloons: 30 cm wide, 45 cm tall, floating 0.8–2.0 m high
   (balloon centre). Which one has which colour changes with the layout.
 - Every balloon is 1–3.5 m from the take-off point. Balloons are never
   stacked, and the gap between two balloons is at least 16 cm, about the

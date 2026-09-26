@@ -16,7 +16,7 @@ Status 2026-09-25. Launches: `competition.launch.py` (participant runs: seeded r
 
 Points: **green 100, blue 50, yellow 25, and red −75 (a penalty)**. Red
 balloons are obstacles: popping one subtracts 75 points. Competition
-layouts have 12 balloons (green 2, blue 3, yellow 4, red 3; best 450; see
+layouts have 18 balloons (green 3, blue 5, yellow 6, red 4; best 700; see
 "Competition rules" below). The default (demo) layout here has two of each
 colour; its best achievable score is **350**
 (everything except red). In this default (demo) layout the balloons are
@@ -42,19 +42,32 @@ and the per-colour counts from this file.
   removed and its colour's points are added, once.
 * Balloons are **visual-only** (no collision): the vehicle is not deflected
   by a balloon; on first contact the balloon pops, as a real one would.
-* **Time limit**: `time_limit_s` = 15 s of simulation time.
+* **Time limit**: `time_limit_s` = 15 s of simulation time in this file (for
+  `arena.launch.py` and the demo; competition runs use 25 s, see below).
   `clock_start: sim_start` (the default, as requested) counts from
   simulation time 0, so the firmware's ~4 s start-up and the take-off count
   against the limit and about 11 s of flight remain.
   `clock_start: armed` starts the clock when the flight controller first
   reports ARMED.
   **The competition uses `clock_start: armed`** (competition.launch.py
-  sets it): a participant gets the full 15 s of flight whatever the
+  sets it): a participant gets the full run time whatever the
   firmware start-up time, as on the real drone, where the run starts when
   the drone arms.
-* **Competition rules: 15 s and 12 balloons** (green 2, blue 3, yellow 4,
-  red 3; best score 450; set in the `competition:` block of
-  arena_default.yaml, decided 2026-09-26). Every competition layout has
+* **Competition rules: 25 s and 18 balloons** (green 3, blue 5, yellow 6,
+  red 4; best score 700; set in the `competition:` block of
+  arena_default.yaml, decided 2026-09-26). Chosen to widen the score gap
+  between algorithms: in a short run the first search takes a large share
+  of the time and luck (is a balloon in view at the start?) decides much;
+  over 25 s a controller that searches, re-targets and flies efficiently
+  pulls ahead of one that stalls, and layout luck averages out. With 14
+  good balloons nobody runs out: a very good controller at one pop every
+  ~2 s after the first search would pop about 11. High-value balloons are
+  the rarest; red is about a fifth. 30 of 30 test layouts generated with
+  the same spacing rules (mean nearest-balloon spacing 0.83 m). Cost:
+  evaluation runs take about 40 s each, and the hardware round needs 18
+  balloons per layout.
+* **Previous rules: 15 s and 12 balloons** (green 2, blue 3, yellow 4,
+  red 3; best score 450; 2026-09-26, same day). Every competition layout has
   this composition (so every layout offers the same 450 points); where the
   balloons float and which one has which colour come from the seed. The
   analysis and evaluation notebooks show these rules and flag any run with
@@ -156,8 +169,8 @@ When the time is up, the world pauses and the scoreboard prints the result
 table in the terminal and shows the final score in RViz. **It is not a
 solution to the challenge:** teams must find the balloons with the camera.
 
-The demo runs for **35 s** (`time_limit_s`; the arena config's competition
-limit stays 15 s). It visits the six non-red balloons
+The demo runs for **35 s** (`time_limit_s`; competition runs use the
+official 25 s). It visits the six non-red balloons
 (`demo/config/balloon_demo.yaml`) in the shortest order, 17.5 m in total, and
 every leg of the planned route passes at least 1.08 m from both red
 balloons (the flown path came within 1.05 m, below). Measured in
@@ -176,7 +189,7 @@ No red balloon was popped. The closest approaches were 2.47 m (red 4) and
 1.05 m (red 5); popping needs about 0.23 m. `simulation_engine/scripts/check_arena.sh` with
 `FORBID=red` fails the run if a red balloon pops.
 
-Competition-length variant (15 s; route blue 3 → green 7, at least 2.2 m
+Short variant (15 s; route blue 3 → green 7, at least 2.2 m
 from red):
 
 ```bash

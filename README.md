@@ -18,16 +18,16 @@ and score your algorithm.
 using **only the drone's camera**. Your program runs on **your laptop**. It
 receives the video from the drone, decides how to fly, and sends flight
 commands back to the drone. Pop as many good balloons as you can in
-**15 seconds**, and avoid the red ones.
+**25 seconds**, and avoid the red ones.
 
 | Balloon | green | blue | yellow | red |
 |---|---|---|---|---|
 | Points | **+100** | **+50** | **+25** | **−75** (avoid) |
 
-There are **12 balloons**: 2 green, 3 blue, 4 yellow and 3 red (the
-high-value ones are the rarest), so the best possible score is **450**.
+There are **18 balloons**: 3 green, 5 blue, 6 yellow and 4 red (the
+high-value ones are the rarest), so the best possible score is **700**.
 Where each balloon floats, and which one has which colour, changes with
-every layout. There are more good balloons than anyone can pop in 15 s,
+every layout. There are more good balloons than anyone can pop in 25 s,
 so you never run out.
 
 The competition has **two rounds**:
@@ -453,7 +453,7 @@ ros2 launch pluto_x_demo balloon_demo.launch.py
 
 The drone flies a pre-planned route and pops all six good balloons of its
 own fixed 8-balloon layout (score 350 there). It knows where the balloons are, which your controller does not, and
-it is given 35 s on a fixed layout instead of 15 s: it only shows you what
+it is given 35 s on a fixed layout instead of 25 s: it only shows you what
 the arena looks like, it is not a benchmark.
 
 ### 2. Run the example controller
@@ -475,7 +475,7 @@ ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controll
 ```
 
 What happens: Gazebo and RViz open, your controller arms the drone after
-about 4 s, and **the 15 s clock starts**. When the time is up, the simulation
+about 4 s, and **the 25 s clock starts**. When the time is up, the simulation
 pauses and the score is printed. Press **Ctrl-C** to stop. (The
 `process has died ... exit code -2` lines after Ctrl-C are normal.)
 **One run per launch:** start the command again for the next run.
@@ -525,7 +525,7 @@ seen, the way it will be judged:
 python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
 ```
 
-It flies 10 runs on 10 random layouts (about 25 s each on a fast computer,
+It flies 10 runs on 10 random layouts (about 40 s each on a fast computer,
 no windows) and prints your average score. Then open the report:
 
 ```bash

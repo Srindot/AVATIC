@@ -40,10 +40,10 @@ What happens:
 1. The Gazebo window (the 3-D world) and RViz (the drone's camera view)
    open. Without windows: add `headless:=true rviz:=false` to the command.
 2. After about 4 s the drone's flight controller is ready. Your controller
-   **arms** the drone (starts the motors). The **15 s clock starts now.**
+   **arms** the drone (starts the motors). The **25 s clock starts now.**
 3. The template climbs to 1 m and hovers. It does not chase balloons: that
    is your job.
-4. After 15 s the simulation pauses and the result table is printed in the
+4. After 25 s the simulation pauses and the result table is printed in the
    terminal (look for `score`).
 5. Press **Ctrl-C** to stop the simulator. Lines like
    `[ERROR] [gz sim-1]: process has died ... exit code -2` are normal after

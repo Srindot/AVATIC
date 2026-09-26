@@ -14,7 +14,7 @@ python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.p
 ```
 
 - It flies **10 runs on 10 random layouts**, one after another, without
-  windows. Each run takes about 25 s, so 10 runs take about 5 minutes.
+  windows. Each run takes about 40 s, so 10 runs take about 7 minutes.
 - It never uses your practice layout (the seed in `analysis/seed.yaml`).
 - It prints each run's score and, at the end, your **average score**.
 - **Ctrl-C** stops early. The runs already done are kept.
@@ -34,7 +34,7 @@ cell.
 
 | Section | What you learn |
 |---|---|
-| **Headline** | your **average score out of 450** (runs where your controller never armed count as 0, as in judging), the lowest, middle and highest scores, red balloons hit, failed runs |
+| **Headline** | your **average score out of 700** (runs where your controller never armed count as 0, as in judging), the lowest, middle and highest scores, red balloons hit, failed runs |
 | **Score per run** | one bar per layout, and how the scores are spread |
 | **Balloons per colour** | how often you popped each colour, over all runs |
 | **Time to the first pop** | how fast your controller finds a balloon |

@@ -35,7 +35,7 @@ met.
   late, which makes jerky controllers worse.
 - **The drone drifts.** Wind and small errors move it even with centred
   sticks. Keep correcting with what the camera shows.
-- **Use the time well.** 15 s is short, and a full turn at the maximum
+- **Use the time well.** 25 s goes fast, and a full turn at the maximum
   `yaw_rate` takes about 6 s. Remember where you saw balloons (your heading
   + the balloon's bearing) and turn the short way to the next one after a
   pop, instead of searching again.

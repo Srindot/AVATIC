@@ -12,7 +12,7 @@
   record:=false               don't save the run (default: analysis/runs/<date-time>/)
   headless:=true rviz:=false  no windows
 
-The simulator waits for your controller (no built-in autopilot). The 15 s
+The simulator waits for your controller (no built-in autopilot). The official
 run clock starts when your controller ARMS the drone; at the end the
 simulation pauses and the scoreboard prints the result.
 
@@ -164,7 +164,7 @@ def _setup(context):
     arena['time_limit_s'] = float(time_limit) if time_limit else float(rules['time_limit_s'])
     if not 0.0 < arena['time_limit_s'] < 3600.0:   # also rejects nan
         raise RuntimeError(f"time_limit_s must be in (0, 3600) s, got {arena['time_limit_s']}")
-    arena['clock_start'] = 'armed'          # the 15 s start when the controller arms
+    arena['clock_start'] = 'armed'          # the run clock starts when the controller arms
     if LaunchConfiguration('msp_bridge').perform(context).lower() == 'true':
         # a real drone does not freeze at the time limit: keep the physics
         # running so the hardware backend's landing can be tested

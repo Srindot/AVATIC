@@ -23,7 +23,7 @@ ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controll
 Your `step()` is called 20 times per second:
 
 ```python
-def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 15)
+def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 25)
     ...
     return Command(roll=0.0, pitch=0.0, yaw_rate=0.0, throttle=0.76)
 ```
@@ -45,9 +45,9 @@ def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 15)
 | Balloon | green | blue | yellow | red |
 |---|---|---|---|---|
 | Points | +100 | +50 | +25 | **−75** |
-| How many | 2 | 3 | 4 | 3 |
+| How many | 3 | 5 | 6 | 4 |
 
-15 s from arming. The best possible score is 450.
+25 s from arming, 18 balloons. The best possible score is 700.
 
 **Remember:** keep the throttle smooth and above about 0.5 in the air,
 don't use `altitude_hold`, and keep your files in this folder.

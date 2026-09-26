@@ -9,7 +9,7 @@ while approaching it (demo/pluto_x_demo/balloon_demo.py,
 demo/config/balloon_demo.yaml). Teams have neither: their controller must find
 the balloons in the camera image.
 
-The demo runs for 35 s (time_limit_s; the competition limit is 15 s), long
+The demo runs for 35 s (time_limit_s; the competition limit is 25 s), long
 enough to visit the six non-red balloons. Then the simulation pauses and the
 scoreboard prints the result table in this terminal (and shows the final
 score in RViz). time_limit_s:=15 shows the competition-length run.
@@ -36,8 +36,8 @@ def generate_launch_description():
         DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument('result_file', default_value=''),
-        # longer than the 15 s competition run, so the demo can visit
-        # every balloon (the arena config file itself stays at 15 s)
+        # longer than the 25 s competition run, so the demo can visit
+        # every balloon
         DeclareLaunchArgument('time_limit_s', default_value='35'),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'arena.launch.py')),

@@ -3,7 +3,7 @@
 
     python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
 
-Each run is a normal competition run (headless, 15 s from arming), with its
+Each run is a normal competition run (headless, the official rules: 25 s from arming, 18 balloons), with its
 own random layout. Everything is saved to
 evaluation/sessions/<date-time>/:
 
@@ -23,7 +23,7 @@ Options:
                       organisers use a list of seeds the teams have not seen
   --timeout S         wall-clock limit per run (default 120 s)
 
-Runs are sequential (each renders a 720p camera); about 25 s per run on a
+Runs are sequential (each renders a 720p camera); about 40 s per run on a
 fast computer (more on a slow one).
 Needs the workspace sourced (source install/setup.bash). summary.csv and
 session.yaml are rewritten after every run, so an interrupted session keeps
@@ -228,7 +228,7 @@ def main():
             'started_local_time': datetime.now().isoformat(timespec='seconds'),
             'seeds': seeds, 'runs': len(seeds)}
     print(f'evaluation session {session}\n  controller {controller}\n  {len(seeds)} runs, '
-          f'seeds {seeds}\n  about {len(seeds) * 25 // 60 + 1} min', flush=True)
+          f'seeds {seeds}\n  about {len(seeds) * 40 // 60 + 1} min', flush=True)
     signal.signal(signal.SIGTERM, _raise_interrupt)
     signal.signal(signal.SIGHUP, _raise_interrupt)
 
