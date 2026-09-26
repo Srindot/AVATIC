@@ -77,6 +77,80 @@ drone.
 In the simulator the camera gives the same 1280 × 720 picture at about
 18 frames per second, without the Wi-Fi delay.
 
+#### Camera intrinsics (simulated camera)
+
+An ideal pinhole camera: square pixels and no lens distortion.
+
+| Parameter | Value |
+|---|---|
+| Image size | 1280 × 720 px, RGB |
+| Horizontal field of view | 80° (vertical: about 50.5°) |
+| Focal length fx = fy | 762.7 px (= 640 / tan 40°) |
+| Principal point (cx, cy) | (640, 360), the image centre |
+| Distortion | none |
+| Image noise | Gaussian, standard deviation 0.7 % of full scale (about 2 levels out of 255) |
+| Frame rate | 18 Hz |
+
+```text
+      [ 762.7    0    640 ]
+K  =  [   0    762.7  360 ]
+      [   0      0      1 ]
+```
+
+A point (X, Y, Z) in front of the camera (camera frame: X right, Y down,
+Z forward, in metres) appears at pixel u = 762.7 X / Z + 640,
+v = 762.7 Y / Z + 360.
+
+#### Camera extrinsics (camera on the drone)
+
+Measured from the drone's centre (its centre of mass), in the drone's own
+frame: x forward, y left, z up.
+
+| Parameter | Value |
+|---|---|
+| Position | x = +0.035 m (forward), y = 0, z = −0.018 m (below the centre) |
+| Orientation | looks straight ahead along the drone's x axis, no tilt |
+
+From the camera's frame (X right, Y down, Z forward) to the drone's frame:
+
+```text
+                [  0   0   1 ]                    [  0.035 ]
+R_drone_cam  =  [ -1   0   0 ]      t_drone_cam =  [  0     ]  m
+                [  0  -1   0 ]                    [ -0.018 ]
+```
+
+so a point p in the camera frame is at `R_drone_cam @ p + t_drone_cam` in
+the drone frame. The camera is rigidly fixed: when the drone tilts, the
+camera tilts with it.
+
+These are the simulator's values. The real camera module's lens and exact
+mounting are not published: the field of view and the position are
+estimates, to be measured on the real drone.
+
+### The simulated sensors
+
+The simulator gives the drone's real flight-controller firmware the same
+sensor data as the real chips, with realistic noise. The firmware
+calibrates them and estimates the tilt, heading and height itself, as on
+the real drone. **Your controller only gets these estimates, never perfect
+values.**
+
+| Sensor | Real chip | Simulated |
+|---|---|---|
+| Gyroscope | ICM-20948 | ±2000 °/s, noise 0.1 °/s, startup bias about 1 °/s (removed by the firmware's calibration) |
+| Accelerometer | ICM-20948 | ±8 g, noise 1 mg, residual bias 5 mg |
+| Magnetometer | AK09916 (in the ICM-20948) | Earth's field at Hyderabad (40 µT north, 19.5 µT down), compass calibrated |
+| Barometer | ICP-10111 | pressure at 505 m altitude and 30 °C, noise 1 Pa (about 9 cm of height) |
+| Battery monitor | on the board | 1S 600 mAh LiPo: voltage 4.2 V full, sags under load; thrust drops as the battery drains |
+| Camera | Pluto Wi-Fi camera | see above |
+
+The simulator also adds **wind gusts**, a **50 ms command delay** (like
+the Wi-Fi link), motor lag, and air drag. Not modelled: motor vibration,
+magnetic disturbances, Wi-Fi packet loss, and the real camera's video
+delay. All values are in
+[`simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml`](simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml),
+with their sources in [docs/pluto_x_parameters.md](docs/pluto_x_parameters.md).
+
 ### Project structure
 
 ```text

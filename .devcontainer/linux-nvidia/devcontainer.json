@@ -1,4 +1,4 @@
-{
+nvim {
     "name": "Linux + NVIDIA GPU | AVATIC",
     "privileged": true,
     "remoteUser": "rosusr",
