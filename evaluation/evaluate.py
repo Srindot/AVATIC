@@ -23,7 +23,8 @@ Options:
                       organisers use a list of seeds the teams have not seen
   --timeout S         wall-clock limit per run (default 120 s)
 
-Runs are sequential (each renders a 720p camera); about 35 s per run.
+Runs are sequential (each renders a 720p camera); about 25 s per run on a
+fast computer (more on a slow one).
 Needs the workspace sourced (source install/setup.bash). summary.csv and
 session.yaml are rewritten after every run, so an interrupted session keeps
 the runs done so far.
@@ -224,7 +225,7 @@ def main():
             'started_local_time': datetime.now().isoformat(timespec='seconds'),
             'seeds': seeds, 'runs': len(seeds)}
     print(f'evaluation session {session}\n  controller {controller}\n  {len(seeds)} runs, '
-          f'seeds {seeds}\n  about {len(seeds) * 35 // 60 + 1} min', flush=True)
+          f'seeds {seeds}\n  about {len(seeds) * 25 // 60 + 1} min', flush=True)
     signal.signal(signal.SIGTERM, _raise_interrupt)
     signal.signal(signal.SIGHUP, _raise_interrupt)
 
@@ -244,10 +245,10 @@ def main():
     finally:
         _kill_active()
         save(session, meta, rows, finished=True)
-    print(f"\nRESULT: mean score {meta['mean_score']} over {meta['completed_runs']} completed "
-          f"runs (min {meta['min_score']}, max {meta['best_run_score']}; best possible "
-          f"{meta['best_possible_per_run']} per run); mean incl. never-armed runs as 0: "
-          f"{meta['mean_score_all']}; red hits {meta['red_hits_total']}; simulator failures "
+    print(f"\nRESULT: mean score {meta['mean_score_all']} (never-armed runs count 0; "
+          f"best possible {meta['best_possible_per_run']} per run); over the "
+          f"{meta['completed_runs']} completed runs: mean {meta['mean_score']}, min "
+          f"{meta['min_score']}, max {meta['best_run_score']}; red hits {meta['red_hits_total']}; simulator failures "
           f"{meta['simulator_failures']}\nsaved to {session}\n"
           'open evaluation/evaluation.ipynb to see the results', flush=True)
 

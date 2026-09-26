@@ -209,8 +209,12 @@ class RunRecorder(Node):
                 self.get_logger().error('ffmpeg not found (sudo apt install ffmpeg): '
                                         'no camera.mp4 for this run')
                 return
+        data = bytes(m.data)
+        row = m.width * 3
+        if m.step != row:   # rows padded: ffmpeg needs them packed
+            data = b''.join(data[r * m.step:r * m.step + row] for r in range(m.height))
         try:
-            self.video.stdin.write(bytes(m.data))
+            self.video.stdin.write(data)
         except (BrokenPipeError, OSError):
             return
         self.writers['camera_frames'].writerow([self.video_frames, f'{stamp_s(m.header.stamp):.3f}'])

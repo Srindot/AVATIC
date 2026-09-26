@@ -641,12 +641,13 @@ std::string DescribeLegacyStackConfig(const LegacyStackConfig& config) {
   out << "actuation: thrust in [" << a.thrust_min_n << ", " << a.thrust_max_n
       << "] N, |torque|(roll,pitch,yaw) <= ("
       << a.torque_limit_n_m.transpose() << ") N m\n";
-  out << "legacy controller (used only with flight_controller: legacy): period="
-      << config.controller.period_s
-      << " s (cascade position -> attitude -> rate -> mixer), "
-      << "position error_frame="
-      << PositionErrorFrameName(config.controller.position.error_frame)
-      << "\n";
+  if (config.flight_controller.type == FlightControllerType::kLegacy) {
+    out << "legacy controller: period=" << config.controller.period_s
+        << " s (cascade position -> attitude -> rate -> mixer), "
+        << "position error_frame="
+        << PositionErrorFrameName(config.controller.position.error_frame)
+        << "\n";
+  }
   out << "rotor time constant=" << r.time_constant_s << " s; battery "
       << (config.battery.enabled ? "enabled" : "disabled");
   if (config.battery.enabled) {

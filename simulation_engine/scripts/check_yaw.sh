@@ -20,7 +20,8 @@ SIM_PGID=""
 trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
 
 readonly SHUTDOWN_GRACE_S=10
-readonly SHARE="$(ros2 pkg prefix pluto_x_autonomy)/share/pluto_x_autonomy"
+PREFIX="$(ros2 pkg prefix pluto_x_autonomy)"   # fails here (set -e) if not sourced
+readonly SHARE="${PREFIX}/share/pluto_x_autonomy"
 modes=("${@:-open_loop closed_loop}")
 failures=0
 

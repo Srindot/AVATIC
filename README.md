@@ -89,7 +89,7 @@ An ideal pinhole camera: square pixels and no lens distortion.
 | Principal point (cx, cy) | (640, 360), the image centre |
 | Distortion | none |
 | Image noise | Gaussian, standard deviation 0.7 % of full scale (about 2 levels out of 255) |
-| Frame rate | 18 Hz |
+| Frame rate | about 18 Hz |
 
 ```text
       [ 762.7    0    640 ]
@@ -167,7 +167,9 @@ AVATIC/
 ├── simulation_engine/       the simulator (do not change)
 ├── firmware/magisv2/        the drone's real firmware (do not change)
 ├── images/                  pictures used in this README
-└── .devcontainer/           the Docker development environment
+├── .devcontainer/           the Docker development environment
+├── resources/               Pluto Python tutorials (reference)
+└── literature_survey/       papers (reference)
 ```
 
 You only ever write code in `outerloop_controller/`.
@@ -211,14 +213,15 @@ changes:
 flowchart TB
     C["my_controller.py<br/>(your code, unchanged)"]
     C --> D{"avatic_drone.Drone"}
-    D -- "default" --> SIM["Simulator backend<br/>ROS 2"]
-    D -- "--hardware" --> HW["Hardware backend<br/>Wi-Fi (MSP) + H.264 video"]
+    D -->|"default"| SIM["Simulator backend<br/>ROS 2"]
+    D -->|"--hardware"| HW["Hardware backend<br/>Wi-Fi (MSP) + H.264 video"]
     SIM --> G["Gazebo physics<br/>+ the real MagisV2 firmware<br/>+ simulated camera, wind, battery"]
     HW --> P["Real Pluto X<br/>+ camera module"]
 ```
 
-- **Round 1:** the launch command below (or
-  `python3 outerloop_controller/my_controller.py`) flies the simulated drone.
+- **Round 1:** the launch command below flies the simulated drone (or
+  `python3 outerloop_controller/my_controller.py`, with the simulator
+  already running in another terminal).
 - **Round 2:** `python3 outerloop_controller/my_controller.py --hardware`
   flies the real drone over Wi-Fi.
 
@@ -254,21 +257,35 @@ Then choose **one** of the two ways to set it up:
 > This is the harder way. If something goes wrong, Option 2 is usually
 > faster.
 
-1. **Install ROS 2 Humble** by following the official guide:
-   <https://docs.ros.org/en/humble/Installation/Alternatives/Ubuntu-Development-Setup.html>
+1. **Install ROS 2 Humble** from the Debian packages, following the
+   official guide (the "desktop" install is fine):
+   <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>
 
-2. **Install Gazebo Harmonic** (with its ROS 2 connection) by following:
-   <https://gazebosim.org/docs/latest/ros_installation/>
-   (choose ROS 2 Humble + Gazebo Harmonic: `ros-humble-ros-gzharmonic`).
+   (Use this package install, not the build-from-source guide: the next
+   steps need the packages in `/opt/ros/humble`.)
+
+2. **Install Gazebo Harmonic** and its ROS 2 connection. Add the Gazebo
+   (OSRF) package source as described in
+   <https://gazebosim.org/docs/harmonic/install_ubuntu/>, then:
+
+   ```bash
+   sudo apt install gz-harmonic ros-humble-ros-gzharmonic
+   ```
+
+   (More about the ROS 2 connection: <https://gazebosim.org/docs/harmonic/ros_installation/>.)
 
 3. **Install the remaining tools:**
 
    ```bash
-   sudo apt install ros-humble-xacro ros-humble-rviz2 python3-colcon-common-extensions \
-       libeigen3-dev libyaml-cpp-dev patch ffmpeg \
-       python3-numpy python3-yaml python3-matplotlib python3-pytest python3-pip
+   sudo apt install build-essential cmake pkg-config patch \
+       ros-humble-xacro ros-humble-rviz2 ros-humble-ament-cmake-gtest python3-colcon-common-extensions \
+       libeigen3-dev libyaml-cpp-dev ffmpeg \
+       python3-numpy python3-yaml python3-matplotlib python3-pytest python3-pip python3-opencv
    pip install notebook
    ```
+
+   (Use Ubuntu's `python3-opencv`, not `pip install opencv-python`: the pip
+   version installs NumPy 2, which breaks ROS and matplotlib here.)
 
 4. **Build the simulator** (once, from the `AVATIC` folder, a few minutes):
 
@@ -296,63 +313,99 @@ outer loop.
 ### Option 2: Docker dev container
 
 The dev container is a ready-made Ubuntu 22.04 with ROS 2, Gazebo and
-everything else installed. VS Code opens this folder inside it.
+everything else installed. VS Code opens this folder inside it. You only
+install the tools below on your own computer.
 
-1. **Install:**
-   - [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows and macOS)
-   - [VS Code](https://code.visualstudio.com/) with the
-     **Dev Containers** extension (`ms-vscode-remote.remote-containers`)
+**Your computer needs:** about **15 GB of free disk** (the image is a
+1 GB download and 5 GB on disk, plus the simulator build), **8 GB of
+RAM** (16 GB is better), and a good internet connection for the first
+start.
 
-2. **Allow windows from the container** (so Gazebo and RViz can open):
+#### What to install: Linux (Ubuntu)
 
-   - **Ubuntu:**
-     ```bash
-     sudo apt update && sudo apt install x11-xserver-utils
-     ```
-   - **Arch:**
-     ```bash
-     sudo pacman -S xorg-xhost
-     ```
-   - **Windows (WSL2):** inside your WSL Ubuntu terminal run
-     `sudo apt update && sudo apt install x11-xserver-utils`. Keep the
-     repository inside WSL (for example `~/AVATIC`) and open it from there
-     with `code .`. WSLg then shows the Gazebo and RViz windows.
-   - **macOS:** install [XQuartz](https://www.xquartz.org/). In its
-     settings under *Security*, tick *Allow connections from network
-     clients*, restart it, then run `xhost +localhost` in a terminal.
+| # | What | Why | How |
+|---|---|---|---|
+| 1 | **Docker Engine** | runs the container | `curl -fsSL https://get.docker.com \| sh` ([other ways](https://docs.docker.com/engine/install/ubuntu/)) |
+| 2 | **Docker without sudo** | VS Code runs Docker as you | `sudo usermod -aG docker $USER`, then **log out and in** |
+| 3 | **xhost** | lets the container open Gazebo and RViz windows | `sudo apt install x11-xserver-utils` (Arch: `sudo pacman -S xorg-xhost`) |
+| 4 | **git** | clone the repository | `sudo apt install git` |
+| 5 | **VS Code** + the **Dev Containers** extension | opens the folder in the container | [VS Code](https://code.visualstudio.com/), then extension `ms-vscode-remote.remote-containers` |
+| 6 | *optional:* **NVIDIA driver + NVIDIA Container Toolkit** | only to let Gazebo use an NVIDIA card | see below |
 
-3. **NVIDIA graphics card (Linux, optional):** the normal **Linux**
-   container works on any computer (Gazebo draws with your usual graphics
-   driver). To use an NVIDIA card instead, you need its driver working
-   (`nvidia-smi` prints your card) and the NVIDIA Container Toolkit:
+Check: `docker run --rm hello-world` works **without** `sudo`, and
+`xhost` prints something (not "command not found").
 
-   ```bash
-   curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-     && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-       sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-       sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-   sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
-   sudo systemctl restart docker
-   ```
+**NVIDIA card (optional).** The normal **Linux** container works on any
+computer (Gazebo draws with your usual graphics driver). To use an NVIDIA
+card instead, the NVIDIA driver must work (`nvidia-smi` prints your card;
+if not: `sudo ubuntu-drivers install` and reboot), and you need the NVIDIA
+Container Toolkit:
 
-   Then choose **Linux + NVIDIA GPU** in the next step. (If the container
-   fails with `libnvidia-ml.so.1: cannot open shared object file`, the
-   NVIDIA driver is missing: choose plain **Linux**, or install the driver
-   with `sudo ubuntu-drivers install` and reboot.) On Windows nothing is
-   needed: WSL uses your graphics card automatically.
+```bash
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
 
-4. **Open the container:** open the `AVATIC` folder in VS Code, press
-   **Ctrl + Shift + P** (Cmd + Shift + P on Mac) and choose
-   **Dev Containers: Reopen in Container**:
+Then choose **Linux + NVIDIA GPU** when opening the container. If it fails
+with `libnvidia-ml.so.1: cannot open shared object file`, the NVIDIA driver
+is missing: choose plain **Linux** instead.
+
+#### What to install: Windows (WSL2)
+
+| # | What | Why | How |
+|---|---|---|---|
+| 1 | **WSL2 with Ubuntu 22.04** | Linux inside Windows (WSLg shows Linux windows) | PowerShell as administrator: `wsl --install -d Ubuntu-22.04`, restart, then `wsl --update` |
+| 2 | **Docker Desktop** | runs the container | [Docker Desktop](https://www.docker.com/products/docker-desktop/), with the WSL 2 backend (the default) |
+| 3 | **Docker's WSL integration** | lets Ubuntu use Docker | Docker Desktop → *Settings → Resources → WSL integration* → turn on **Ubuntu-22.04** |
+| 4 | **VS Code** + the **WSL** and **Dev Containers** extensions | opens the folder in WSL, then in the container | [VS Code](https://code.visualstudio.com/), then extensions `ms-vscode-remote.remote-wsl` and `ms-vscode-remote.remote-containers` |
+| 5 | **git** and **xhost**, inside Ubuntu | clone the repository; allow container windows | in the Ubuntu terminal: `sudo apt update && sudo apt install git x11-xserver-utils` |
+
+Clone the repository **inside Ubuntu** (run the `git clone` command in the
+Ubuntu terminal, for example into `~/AVATIC`), then open it with `code .`
+from there. An NVIDIA card needs only its normal Windows driver: nothing
+else. Check: in the Ubuntu terminal, `docker run --rm hello-world` works.
+
+#### What to install: macOS
+
+| # | What | Why | How |
+|---|---|---|---|
+| 1 | **Docker Desktop** | runs the container | [Docker Desktop](https://www.docker.com/products/docker-desktop/) (choose Apple Silicon or Intel) |
+| 2 | **Rosetta in Docker** (Apple Silicon only: M1, M2, M3 …) | the AVATIC image is built for Intel/AMD; Rosetta runs it much faster than plain emulation | Docker Desktop → *Settings → General* → turn on **"Use Rosetta for x86_64/amd64 emulation on Apple Silicon"** |
+| 3 | **XQuartz** | shows the container's Gazebo and RViz windows (it includes `xhost`) | [XQuartz](https://www.xquartz.org/); in its *Settings → Security* tick **Allow connections from network clients**, then quit and reopen XQuartz |
+| 4 | **git** | clone the repository | `xcode-select --install` |
+| 5 | **VS Code** + the **Dev Containers** extension | opens the folder in the container | [VS Code](https://code.visualstudio.com/), then extension `ms-vscode-remote.remote-containers` |
+
+Before opening the container, and again after every XQuartz restart, run
+in a Mac terminal:
+
+```bash
+xhost +localhost
+```
+
+In Docker Desktop → *Settings → Resources*, give Docker at least **8 GB of
+memory**. On a Mac, Gazebo draws without the GPU, so the windows are
+slower than on Linux; runs with `headless:=true rviz:=false` are not
+affected.
+
+#### Open the container
+
+1. **Open the `AVATIC` folder in VS Code**, press **Ctrl + Shift + P**
+   (Cmd + Shift + P on Mac) and choose **Dev Containers: Reopen in
+   Container**:
 
    ![Reopen in Container](images/guide/reopen.png)
 
-   Pick your platform: **Linux**, **Linux + NVIDIA GPU**, **WSL** or
-   **MacOS**. The first time,
-   it downloads the image and builds the simulator, which takes a while.
-   The next times it opens in seconds.
+2. **Pick your platform:** **Linux**, **Linux + NVIDIA GPU**, **WSL** or
+   **MacOS**. The first time, it downloads the image and builds the
+   simulator, which takes a while (watch the log; it ends with
+   `== done`). The next times it opens in seconds.
 
-5. **Open a terminal** in VS Code (*Terminal → New Terminal*, choose
+3. **Open a terminal** in VS Code (*Terminal → New Terminal*, choose
    `bash`). The environment is already loaded, and you are in the
    repository folder.
 
@@ -363,8 +416,11 @@ press Ctrl + Shift + P and choose **Dev Containers: Rebuild Container**.
 
 ### Load the environment
 
-In **every new terminal** (not needed in the dev container: it does this
-for you), from the `AVATIC` folder:
+**Dev container:** nothing to do. Every new terminal is ready and starts in
+the repository folder. If something says `Package '...' not found`, open a
+new terminal.
+
+**Local setup:** in every new terminal, from the `AVATIC` folder:
 
 ```bash
 source /opt/ros/humble/setup.bash     # ROS 2
@@ -380,8 +436,9 @@ ros2 launch pluto_x_demo balloon_demo.launch.py
 ```
 
 The drone flies a pre-planned route and pops all six good balloons (score
-350). It knows where the balloons are, which your controller does not; it
-only shows you what the arena looks like.
+350). It knows where the balloons are, which your controller does not, and
+it is given 35 s on a fixed layout instead of 15 s: it only shows you what
+the arena looks like, it is not a benchmark.
 
 ### 2. Run the example controller
 
@@ -402,7 +459,7 @@ ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controll
 ```
 
 What happens: Gazebo and RViz open, your controller arms the drone after
-about 4 s, and **the 15 s start**. When the time is up, the simulation
+about 4 s, and **the 15 s clock starts**. When the time is up, the simulation
 pauses and the score is printed. Press **Ctrl-C** to stop. (The
 `process has died ... exit code -2` lines after Ctrl-C are normal.)
 **One run per launch:** start the command again for the next run.
@@ -414,10 +471,14 @@ pauses and the score is printed. Press **Ctrl-C** to stop. (The
 | `controller:=<file>` | the controller to run | none (then run it yourself in a second terminal) |
 | `headless:=true` | no Gazebo window (faster) | `false` |
 | `rviz:=false` | no RViz window | `true` |
-| `arena_seed:=random` | a new random balloon layout for this run | `analysis`: the fixed layout in `analysis/seed.yaml` |
+| `arena_seed:=random` | a new random balloon layout for this run | `analysis`: the development layout, whose seed is in `analysis/seed.yaml` (42 at first) |
 | `arena_seed:=7` | a specific layout (any number) | |
 | `time_limit_s:=30` | a longer run while developing (judging uses 15) | `15` |
 | `record:=false` | do not save this run | `true` |
+| `record_dir:=<folder>` | save runs in this folder instead of `analysis/runs/` | `analysis/runs` |
+
+`controller:=` also takes an absolute path, and a controller stored in any
+folder can import `avatic_drone` when started this way.
 
 For example, a fast run without windows on a random layout:
 
@@ -434,7 +495,8 @@ the notebook:
 jupyter notebook analysis/analysis.ipynb
 ```
 
-Choose *Kernel → Restart & Run All*. It shows your latest run: the score
+Run all the cells: in VS Code (dev container) open the notebook and click
+**Run All**; in the browser, *Run → Run All Cells*. It shows your latest run: the score
 first, then a map of your flight over the balloons, your commands, and what
 the camera saw at key moments. See [analysis/README.md](analysis/README.md).
 
@@ -447,8 +509,8 @@ seen, the way it will be judged:
 python3 evaluation/evaluate.py --controller outerloop_controller/my_controller.py --runs 10
 ```
 
-It flies 10 runs on 10 random layouts (about 25 s each, no windows) and
-prints your average score. Then open the report:
+It flies 10 runs on 10 random layouts (about 25 s each on a fast computer,
+no windows) and prints your average score. Then open the report:
 
 ```bash
 jupyter notebook evaluation/evaluation.ipynb
@@ -475,12 +537,13 @@ Your submission must include **all** of the following:
    **executed** on an evaluation of your final controller (at least 10
    runs).
 4. **A video:** a screen recording of your best simulation run, showing
-   the Gazebo window from arming to the final score.
+   the Gazebo and RViz windows from arming to the end (RViz shows the
+   live and the final score).
 5. **A report** explaining your outer-loop idea: how you find the
    balloons in the image, how you decide which one to go for, how you fly
    to it and avoid the red ones, and what you tried that did not work.
 
-To save an executed notebook: run all cells, then *File → Save*. Or from a
+To save an executed notebook: run all cells, then save it (*File → Save*). Or from a
 terminal:
 
 ```bash

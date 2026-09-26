@@ -82,10 +82,15 @@ def _controller(context):
     if not path:
         return []
     path = _resolve_controller(path)
-    # the script connects and waits for the simulator itself (Drone())
+    # the script connects and waits for the simulator itself (Drone()).
+    # avatic_drone on the path, so a controller stored anywhere (e.g. a
+    # submission folder) imports it like one inside outerloop_controller/
+    pythonpath = os.pathsep.join(
+        p for p in (os.path.join(_repo_root(), 'outerloop_controller'),
+                    os.environ.get('PYTHONPATH', '')) if p)
     return [ExecuteProcess(
         cmd=[sys.executable, path], name='controller', output='screen',
-        emulate_tty=True, additional_env={'PYTHONUNBUFFERED': '1'})]
+        emulate_tty=True, additional_env={'PYTHONUNBUFFERED': '1', 'PYTHONPATH': pythonpath})]
 
 
 def _seed_file():

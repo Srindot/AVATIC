@@ -21,7 +21,7 @@
 
 - It looks **straight ahead** (not tilted down), from under the nose of the
   drone: 3.5 cm in front of the centre, 1.8 cm below it.
-- Picture: **1280 × 720** pixels, about **18 per second**. Field of view:
+- Picture: **1280 × 720** pixels, about **17–18 per second**. Field of view:
   about **80° wide and 50° high**.
 - The camera is fixed to the drone, so **it tilts with the drone.** When you
   pitch forward (nose down), everything in the picture moves **up**; when
@@ -103,9 +103,12 @@ colour.
 ## Look at the pictures yourself
 
 - In the analysis notebook, the last section shows the camera at key
-  moments. `runlog.show_frames(run, [('my label', 7.5)])` shows the picture
-  at 7.5 s of simulation time.
-- Every run folder has `camera.mp4`: open it with any video player.
+  moments. `runlog.show_frames(run, [('my label', run.arm_time_s + 3)])` shows the
+  picture 3 s after arming (times are simulation time; arming is at about
+  4 s).
+- Every run folder has `camera.mp4`: open it with any video player. The
+  recording is scaled down to 640 × 360; your controller gets the full
+  1280 × 720.
 - Inside your controller, save a picture to look at later (only a few,
   it is slow): `import matplotlib.pyplot as plt; plt.imsave('frame.png', frame.image)`.
 

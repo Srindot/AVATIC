@@ -16,7 +16,8 @@ trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' 
 
 readonly OUT=log/arena
 readonly SHUTDOWN_GRACE_S=10
-readonly PARAMS="${PARAMS:-$(ros2 pkg prefix pluto_x_autonomy)/share/pluto_x_autonomy/config/arena_demo.yaml}"
+PREFIX="$(ros2 pkg prefix pluto_x_autonomy)"   # fails here (set -e) if not sourced
+readonly PARAMS="${PARAMS:-${PREFIX}/share/pluto_x_autonomy/config/arena_demo.yaml}"
 readonly CONTROLLER="${CONTROLLER:-pluto_x_autonomy.examples.waypoint:WaypointController}"
 rm -rf "${OUT}" && mkdir -p "${OUT}"
 

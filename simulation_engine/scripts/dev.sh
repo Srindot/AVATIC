@@ -7,14 +7,14 @@
 #   PLUTO_GUI=1 simulation_engine/scripts/dev.sh ros2 launch pluto_x_bringup legacy_sim.launch.py
 #
 # Environment:
-#   PLUTO_DEV_IMAGE  image to use (default: the existing VS Code dev image)
+#   PLUTO_DEV_IMAGE  image to use (default: the AVATIC image, .devcontainer/Dockerfile)
 #   PLUTO_GUI=1      forward X11 for the Gazebo GUI
 set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-readonly DEFAULT_IMAGE="vsc-waypoint_navigation_in_ros-px4-ebed5a97c299a5108365952aac7c3de3927da63228357cd7df5f6893d08c6871-uid"
+readonly DEFAULT_IMAGE="ghcr.io/srindot/avatic:latest"
 readonly IMAGE="${PLUTO_DEV_IMAGE:-${DEFAULT_IMAGE}}"
-readonly WORKSPACE="/home/rosusr/avatic"
+readonly WORKSPACE="/home/rosusr/workspace"   # the same path as the dev container
 
 if [[ $# -eq 0 ]]; then
   echo "usage: $0 <command...>" >&2

@@ -39,12 +39,16 @@ A `Command` has four numbers, like the two sticks of a remote control:
 | `yaw_rate` | −1 … +1 | **turn on the spot.** + = turn clockwise (right), seen from above |
 | `throttle` | 0 … 1 | **lift.** About **0.76 hovers**; more climbs, less sinks |
 
+**Fields you leave out are 0, including `throttle`.** `Command(pitch=0.2)`
+alone means "no lift": always set the throttle.
+
 Useful numbers:
 
 - **Tilt:** `pitch` or `roll` 0.2 is about 7°, 0.4 is about 16°, and the
   drone never tilts more than 20° (reached at about 0.45). A small tilt of
   0.1–0.25 is plenty in the small arena.
-- **Turning:** `yaw_rate` 1.0 is about 77° per second, so 0.5 turns
+- **Turning:** about 77° per second per unit of `yaw_rate`, capped at 0.8
+  (about 62°/s). 0.5 is about 38°/s, so it turns
   half a circle in about 5 s.
 - **Throttle:** keep it near 0.76 and correct it with the altitude (the
   template shows how). Tilting needs a little more throttle to keep height.
@@ -58,7 +62,8 @@ Useful numbers:
 - roll and pitch are cut to ±0.6, `yaw_rate` to ±0.8, throttle to 0.95;
 - above **2.5 m** the throttle is lowered so the drone comes down;
 - if you send no command for 0.5 s, the drone levels itself and holds about
-  hover throttle.
+  hover throttle (if it is still on the ground: throttle 0, it never takes
+  off by itself).
 
 **Two things to avoid:**
 
@@ -82,6 +87,8 @@ Useful numbers:
 | `pitch_deg` | forward tilt, **+ = nose up** (note: a positive `pitch` command gives a negative `pitch_deg`) |
 | `battery_v` | battery voltage |
 | `armed` | motors running |
+| `ready_to_arm` | the flight controller has finished its start-up calibration |
+| `altitude_hold` | the firmware's altitude hold is on (keep it off, see above) |
 | `time_s` | when this reading was taken |
 
 There is **no position and no speed.** You can estimate your climb rate
@@ -102,7 +109,10 @@ changes from `heading_deg`.
 The camera makes about 18 pictures per second and `step()` runs 20 times
 per second, so often you get the same picture twice. Check `frame.seq`, as
 the template does, to skip work you already did. For OpenCV, convert
-first: `bgr = cv2.cvtColor(frame.image, cv2.COLOR_RGB2BGR)`.
+first: `bgr = cv2.cvtColor(frame.image, cv2.COLOR_RGB2BGR)`. OpenCV is in
+the dev container; in a local setup install it with
+`sudo apt install python3-opencv` (not `pip install opencv-python`, which
+brings NumPy 2 and breaks ROS).
 
 More about the camera: [4. Camera and directions](4_camera_and_directions.md).
 
@@ -122,7 +132,9 @@ The runner uses these; you can also write your own runner. They come from
 |---|---|
 | `drone = Drone()` | connect to the simulator |
 | `drone.wait_until_ready()` | wait until the flight controller is ready (~4 s) |
-| `drone.arm()` | start the motors: **the 15 s start now** |
+| `drone.arm()` | start the motors: **the 15 s clock starts now** |
+| `drone.disarm()` | stop the motors at once (the drone falls if flying) |
+| `drone.running()` | `False` once the 15 s are over |
 | `drone.get_frame()`, `drone.get_telemetry()` | the latest picture and readings |
 | `drone.send(command)` or `drone.send_command(roll=..., pitch=..., yaw_rate=..., throttle=...)` | fly |
 | `for step in drone.loop(hz=20): ...` | repeat at a steady rate until the time is up |

@@ -138,7 +138,8 @@ def show_objective(session: Session) -> None:
     o = objective(session)
     fmt = (lambda v: '?' if v is None else v)
     rate = (lambda c: f"{100 * c['popped'] / c['available']:.0f} %" if c['available'] else '-')
-    md = [f"## Mean score: **{fmt(o['mean_score'])}** / {fmt(o['best_possible_per_run'])} per run",
+    # the headline is the judged-style mean: a run that never armed scores 0
+    md = [f"## Mean score: **{fmt(o['mean_score_all'])}** / {fmt(o['best_possible_per_run'])} per run",
           '',
           f"session `{session.session_id}`: {o['completed']} of {o['runs']} runs completed"
           + (f" (**{o['failed']} simulator failures**)" if o['failed'] else '')
@@ -147,14 +148,14 @@ def show_objective(session: Session) -> None:
           f"(sha256 {str(session.meta.get('controller_sha256', '?'))[:12]})", '',
           '| | |', '|---|---|',
           f"| min / median / max | {fmt(o['min_score'])} / {fmt(o['median_score'])} / {fmt(o['max_score'])} |",
-          f"| mean incl. never-armed runs as 0 | {fmt(o['mean_score_all'])} |",
+          f"| mean over completed runs only | {fmt(o['mean_score'])} |",
           f"| standard deviation | {fmt(o['std_score'])} |",
           f"| runs scoring 0 or less | {o['runs_scoring_zero_or_less']} |",
           f"| **red balloons hit** | **{o['red_hits_total']}** (in {o['runs_with_red_hit']} runs) |",
           f"| controller errors (step() raised) | {o['controller_errors']} |", '',
           '| balloon | popped (all runs) | hit rate |', '|---|---|---|']
     md += [f"| {c} | {v['popped']} / {v['available']} | {rate(v)} |" for c, v in o['colours'].items()]
-    text = [f"MEAN SCORE {fmt(o['mean_score'])} / {fmt(o['best_possible_per_run'])} per run "
+    text = [f"MEAN SCORE {fmt(o['mean_score_all'])} / {fmt(o['best_possible_per_run'])} per run "
             f"({o['completed']}/{o['runs']} runs completed, {o['failed']} failed)",
             f"  min {fmt(o['min_score'])}  median {fmt(o['median_score'])}  max {fmt(o['max_score'])}"
             f"  std {fmt(o['std_score'])}",
@@ -193,8 +194,9 @@ def plot_scores(session: Session):
                ('tab:gray' if r.get('status') != 'complete' else 'tab:blue') for r in rows]
     ax1.bar(names, scores, color=colours)
     o = objective(session)
-    if o['mean_score'] is not None:
-        ax1.axhline(o['mean_score'], color='k', ls='--', lw=1, label=f"mean {o['mean_score']}")
+    if o['mean_score_all'] is not None:
+        ax1.axhline(o['mean_score_all'], color='k', ls='--', lw=1,
+                    label=f"mean {o['mean_score_all']}")
     if o['best_possible_per_run']:
         ax1.axhline(o['best_possible_per_run'], color='tab:green', ls=':', lw=1,
                     label=f"best possible {o['best_possible_per_run']}")

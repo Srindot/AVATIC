@@ -50,7 +50,8 @@ http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" 
 #                       gz-msgs10 / gz-transport13 headers the AVATIC plugins build against
 #   build tools         compiler, CMake, patch (firmware host patches), Eigen, yaml-cpp,
 #                       gtest, colcon
-#   python / media      NumPy, YAML, matplotlib, pytest, pip; ffmpeg for camera video
+#   python / media      NumPy, YAML, matplotlib, pytest, pip, OpenCV (Ubuntu's, built
+#                       for NumPy 1: the pip wheel would pull NumPy 2); ffmpeg for video
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
         ros-humble-ros-base \
         ros-humble-rviz2 \
@@ -62,6 +63,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
         libeigen3-dev libyaml-cpp-dev \
         python3-colcon-common-extensions \
         python3-pip python3-numpy python3-yaml python3-matplotlib python3-pytest \
+        python3-opencv \
         ffmpeg && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 

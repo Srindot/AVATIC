@@ -2,6 +2,7 @@
     "name": "MacOS | AVATIC",
     "privileged": true,
     "remoteUser": "rosusr",
+    "updateRemoteUserUID": false,   // Docker Desktop maps file ownership itself (no extra image build)
     "image": "ghcr.io/srindot/avatic:latest",
     "workspaceFolder": "/home/rosusr/workspace",
     "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/home/rosusr/workspace",
@@ -29,6 +30,7 @@
         "QT_X11_NO_MITSHM": "1"
     },
     "runArgs": [
+        "--platform=linux/amd64",   // the image is Intel/AMD: Apple Silicon runs it with Rosetta
         "--privileged",
         "--net=host",
         "-e", "DISPLAY=host.docker.internal:0"

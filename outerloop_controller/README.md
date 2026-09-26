@@ -32,7 +32,7 @@ def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 15)
 |---|---|---|
 | `roll` | −1 … 1 | tilt right (+), so the drone slides right (0.2 ≈ 7°, max 20°) |
 | `pitch` | −1 … 1 | nose down (+), so the drone flies forward |
-| `yaw_rate` | −1 … 1 | turn clockwise (+), about 77°/s at 1.0 |
+| `yaw_rate` | −1 … 1 | turn clockwise (+), about 77°/s per unit (capped at 0.8 ≈ 62°/s) |
 | `throttle` | 0 … 1 | lift; about **0.76 hovers** |
 
 | Input | what it is |

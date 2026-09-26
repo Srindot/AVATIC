@@ -1,6 +1,7 @@
 # 1. Getting started
 
-About 15 minutes. At the end you will have flown the drone in the simulator.
+About 15 minutes once everything is installed. At the end you will have
+flown the drone in the simulator.
 
 ## Install
 
@@ -74,7 +75,7 @@ each balloon colour the camera sees:
 ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controller/examples/hello_drone.py
 ```
 
-In the starting layout (seed 42) every balloon is behind or beside the
+In the starting layout (seed 42, the first development seed) every balloon is behind or beside the
 drone, so the colours appear as it turns.
 
 ## Look at what happened
@@ -86,7 +87,7 @@ Open the analysis notebook:
 jupyter notebook analysis/analysis.ipynb
 ```
 
-Then choose *Kernel → Restart & Run All*. The first thing shown is your
+Then run all the cells (VS Code: **Run All**; browser: *Run → Run All Cells*). The first thing shown is your
 score. Below it: a map of your flight over the balloons, your commands, and
 camera pictures from key moments.
 

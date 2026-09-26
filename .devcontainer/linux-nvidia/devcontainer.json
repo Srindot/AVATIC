@@ -1,4 +1,4 @@
-nvim {
+{
     "name": "Linux + NVIDIA GPU | AVATIC",
     "privileged": true,
     "remoteUser": "rosusr",
@@ -24,7 +24,6 @@ nvim {
         }
     },
     "containerEnv": {
-        "DISPLAY": ":0",
         "QT_QPA_PLATFORM": "xcb",
         // needs the NVIDIA driver (nvidia-smi works) and the NVIDIA Container Toolkit
         "NVIDIA_DRIVER_CAPABILITIES": "all",

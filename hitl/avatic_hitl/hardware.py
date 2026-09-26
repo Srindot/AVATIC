@@ -44,7 +44,6 @@ from __future__ import annotations
 import atexit
 import math
 import signal
-import socket
 import threading
 import time
 from typing import Iterator, List, Optional
@@ -237,9 +236,9 @@ class HardwareDrone:
             try:
                 for cmd in requests:
                     self._link.request(cmd)
-            except socket.timeout:
-                pass
             except OSError:
+                # incl. a send timeout (a partly sent frame desynchronises the
+                # stream): a lost link, as in the command loop
                 if not self._stop.is_set():
                     print('[hitl] MSP link lost (telemetry)', flush=True)
                     self._link_dead = True

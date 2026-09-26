@@ -24,7 +24,6 @@
         }
     },
     "containerEnv": {
-        "DISPLAY": ":0",
         "QT_QPA_PLATFORM": "xcb",
         "LD_LIBRARY_PATH": "/usr/lib/wsl/lib",
         "MESA_D3D12_DEFAULT_ADAPTER_NAME": "NVIDIA"   // prefer the NVIDIA GPU if there is one
@@ -35,8 +34,8 @@
         "--device=/dev/dxg",
         "-v", "/usr/lib/wsl:/usr/lib/wsl",
         "-v", "/mnt/wslg:/mnt/wslg",
-        "-e", "WAYLAND_DISPLAY=$WAYLAND_DISPLAY",
-        "-e", "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR",
+        "-e", "WAYLAND_DISPLAY=${localEnv:WAYLAND_DISPLAY}",
+        "-e", "XDG_RUNTIME_DIR=${localEnv:XDG_RUNTIME_DIR}",
         "-e", "DISPLAY=${localEnv:DISPLAY}",
         "-e", "QT_QPA_PLATFORM=xcb",
         "--volume=/tmp/.X11-unix:/tmp/.X11-unix"

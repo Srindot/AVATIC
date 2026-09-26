@@ -17,7 +17,11 @@ Without windows (`headless:=true rviz:=false`) it is faster and uses less of
 your computer. Leave them out when you want to watch. Press Ctrl-C at the
 end. Every run is saved in `analysis/runs/<date>_<time>/`.
 
-All development runs use **the same layout** (seed 42), so you can tell
+**Runs are not exactly repeatable.** Wind gusts and sensor noise differ
+every run, so the same controller on the same layout can score ±50 points
+differently. Judge a change over a few runs, not one.
+
+All development runs use **the same layout** (the development seed in `analysis/seed.yaml`, 42 at first), so you can tell
 whether a change helped. Once your controller handles it, try others:
 
 | | |
@@ -33,7 +37,7 @@ whether a change helped. Once your controller handles it, try others:
 jupyter notebook analysis/analysis.ipynb
 ```
 
-*Kernel → Restart & Run All*. It always shows the **latest** run. For an
+Run all the cells (VS Code: **Run All**; browser: *Run → Run All Cells*). It always shows the **latest** run. For an
 older one, set `RUN = '2026-09-25_14-32-07'` (the folder name) in the first
 cell.
 
@@ -96,10 +100,9 @@ Your submission needs both notebooks **executed**, with all their outputs
 visible:
 
 1. **Analysis:** set `RUN` in the first cell to your **best** run, then
-   *Kernel → Restart & Run All*, then *File → Save*.
+   run all cells, then save.
 2. **Evaluation:** evaluate your **final** controller (at least 10 runs),
-   open `evaluation/evaluation.ipynb`, *Kernel → Restart & Run All*, then
-   *File → Save*.
+   open `evaluation/evaluation.ipynb`, run all cells, then save.
 
 Or from a terminal, in the repository folder:
 

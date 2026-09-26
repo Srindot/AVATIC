@@ -38,7 +38,8 @@ and step() returns a Command:
       roll      -1..1  bank angle     + = bank right   (~7 deg at 0.2, ~16 at 0.4,
                                                         20 deg max from ~0.45)
       pitch     -1..1  tilt angle     + = nose down = fly forward
-      yaw_rate  -1..1  turn rate      + = clockwise    (~77 deg/s at 1.0)
+      yaw_rate  -1..1  turn rate      + = clockwise    (~77 deg/s per unit,
+                                                        capped at 0.8)
       throttle   0..1  thrust         ~0.76 = hover
 
 The template sends it to the drone, which is all the ROS you need.

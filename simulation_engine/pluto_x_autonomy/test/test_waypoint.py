@@ -1,6 +1,5 @@
 import math
 
-import numpy as np
 import pytest
 
 from pluto_x_autonomy.examples.waypoint import WaypointController

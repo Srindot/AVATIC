@@ -12,6 +12,7 @@ missing=()
 command -v ffmpeg >/dev/null || missing+=(ffmpeg)
 dpkg -s ros-humble-ros-gzharmonic >/dev/null 2>&1 || missing+=(ros-humble-ros-gzharmonic)
 dpkg -s ros-humble-xacro >/dev/null 2>&1 || missing+=(ros-humble-xacro)
+dpkg -s python3-opencv >/dev/null 2>&1 || missing+=(python3-opencv)
 if [ ${#missing[@]} -gt 0 ]; then
   echo "== installing: ${missing[*]}"
   sudo apt-get update -qq
@@ -27,6 +28,14 @@ if grep -qsh "^CMAKE_HOME_DIRECTORY" build/*/CMakeCache.txt &&
    ! grep -qsh "^CMAKE_HOME_DIRECTORY:INTERNAL=${REPO}/" build/*/CMakeCache.txt; then
   echo "== build/ was made outside the container: building into build_container/ instead"
   BUILD=build_container INSTALL=install_container LOG=log_container
+  # make these colcon's defaults, so a plain `colcon build` / `colcon test`
+  # typed later in the container uses them too
+  mkdir -p ~/.colcon
+  cat > ~/.colcon/defaults.yaml <<EOF_DEFAULTS
+build: {build-base: ${BUILD}, install-base: ${INSTALL}}
+test: {build-base: ${BUILD}, install-base: ${INSTALL}}
+test-result: {test-result-base: ${BUILD}}
+EOF_DEFAULTS
 fi
 
 # every new terminal: ROS + this workspace, starting in the repository
@@ -34,6 +43,7 @@ MARK='# >>> AVATIC dev container >>>'
 if ! grep -qF "$MARK" ~/.bashrc; then
   cat >> ~/.bashrc <<EOF
 $MARK
+export COLCON_LOG_PATH="${REPO}/${LOG}"
 source /opt/ros/humble/setup.bash
 [ -f "${REPO}/${INSTALL}/setup.bash" ] && source "${REPO}/${INSTALL}/setup.bash"
 cd "${REPO}"

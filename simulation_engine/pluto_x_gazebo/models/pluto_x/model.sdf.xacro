@@ -52,12 +52,12 @@
   </xacro:macro>
 
   <!-- One motor + propeller + guard. sx, sy: signs of the motor position. -->
-  <xacro:macro name="rotor_visuals" params="index sx sy prop_mesh prop_z guard_yaw">
+  <xacro:macro name="rotor_visuals" params="index sx sy guard_yaw">
     <xacro:mesh_visual name="motor_${index}" mesh="motors.dae" scale="0.01"
                        x="${sx * motor_offset_m}" y="${sy * motor_offset_m}" z="0"
                        colour="0.4 0.4 0.4 1"/>
     <!-- Propeller: its 55 mm disc [SRC], translucent (the legacy prop mesh
-         is 20 mm long). prop_mesh/prop_z are kept for the macro calls. -->
+         is 20 mm long). -->
     <visual name="propeller_${index}">
       <pose>${sx * motor_offset_m} ${sy * motor_offset_m} ${0.007 + vz + 0.02} 0 0 0</pose>
       <geometry><cylinder><radius>0.0275</radius><length>0.001</length></cylinder></geometry>
@@ -99,14 +99,10 @@
                          x="0" y="0" z="0" colour="0.15 0.15 0.15 1"/>
       <xacro:mesh_visual name="cap" mesh="cap.dae" scale="0.0088"
                          x="0" y="-0.008" z="0.027" colour="0.05 0.05 0.05 1"/>
-      <xacro:rotor_visuals index="1" sx="-1" sy="-1" prop_mesh="prop.dae"
-                           prop_z="0.025" guard_yaw="${-pi / 4}"/>
-      <xacro:rotor_visuals index="2" sx="-1" sy="1" prop_mesh="prop.dae"
-                           prop_z="0.025" guard_yaw="${-3 * pi / 4}"/>
-      <xacro:rotor_visuals index="3" sx="1" sy="-1" prop_mesh="prop.dae"
-                           prop_z="0.025" guard_yaw="${pi / 4}"/>
-      <xacro:rotor_visuals index="4" sx="1" sy="1" prop_mesh="prop.dae"
-                           prop_z="0.023" guard_yaw="${3 * pi / 4}"/>
+      <xacro:rotor_visuals index="1" sx="-1" sy="-1" guard_yaw="${-pi / 4}"/>
+      <xacro:rotor_visuals index="2" sx="-1" sy="1" guard_yaw="${-3 * pi / 4}"/>
+      <xacro:rotor_visuals index="3" sx="1" sy="-1" guard_yaw="${pi / 4}"/>
+      <xacro:rotor_visuals index="4" sx="1" sy="1" guard_yaw="${3 * pi / 4}"/>
 
       <!-- Ideal IMU (no noise), published for observation only; the legacy
            controller uses the full rigid-body state, as kwad.cpp did.

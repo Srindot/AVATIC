@@ -45,7 +45,7 @@ controller's readings**. Pop the good ones, avoid the red ones.
 The balloon positions come from a number called the **seed**: the same seed
 gives the same layout.
 
-- **While developing**, every run uses the same layout (seed 42, stored in
+- **While developing**, every run uses the same layout (the development seed, 42 at first, stored in
   `analysis/seed.yaml`), so you can see whether a change helped. Change it
   with `python3 analysis/new_seed.py`, or use a random one for a single run
   with `arena_seed:=random`.

@@ -15,7 +15,8 @@ popped (or missed) a balloon.
    jupyter notebook analysis/analysis.ipynb
    ```
 
-3. Choose ***Kernel → Restart & Run All***. The notebook shows your
+3. Run all the cells (VS Code: **Run All**; browser: *Run → Run All
+   Cells*). The notebook shows your
    **latest** run.
 
 To look at an older run, write its folder name in the first cell:
@@ -38,7 +39,8 @@ you what really happened.
 
 ## The balloon layout (seed)
 
-While you develop, every run uses **the same layout** (seed 42), so you can
+While you develop, every run uses **the same layout** (the development
+seed in `analysis/seed.yaml`, 42 at first), so you can
 see whether a change helped:
 
 | Command | What it does |
@@ -69,7 +71,7 @@ jupyter nbconvert --to notebook --execute --inplace analysis/analysis.ipynb
 | `telemetry.csv` | what your controller read from the flight controller |
 | `commands.csv` | what your controller sent (50 times per second) |
 | `events.csv`, `result.yaml` | the pops and the final result |
-| `camera.mp4`, `camera_frames.csv` | the camera video, and the time of each picture |
+| `camera.mp4`, `camera_frames.csv` | the camera video (scaled to 640 × 360), and the time of each picture |
 
 A run takes about 0.5 MB. Delete old runs whenever you like.
 
