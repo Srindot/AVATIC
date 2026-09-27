@@ -240,6 +240,18 @@ flowchart LR
     S -- "video" --> API
 ```
 
+What goes in and out of your `step(frame, telemetry, t)`:
+
+| | what | format |
+|---|---|---|
+| **you send** | `Command(roll, pitch, yaw_rate, throttle)` | four numbers, no units: `roll`, `pitch` −1 … 1 are **tilt angles** the flight controller holds (0.2 ≈ 7°, max 20°), `yaw_rate` −1 … 1 a **turn rate** (≈ 77°/s per unit), `throttle` 0 … 1 the **total thrust** (≈ 0.76 hovers; no altitude hold) |
+| **it becomes** | 8 RC channels, 50 per second | µs, 1000 … 2000: roll, pitch, yaw = 1500 + 500 × value, throttle = 1000 + 1000 × value; angle mode on, altitude hold off; the same in the simulator and over Wi-Fi (MSP) on the real drone |
+| **you get** | `telemetry` (`Telemetry`) | the flight controller's estimates: `roll_deg`, `pitch_deg` (+ = nose up), `heading_deg` (clockwise from north), `altitude_m` (barometer), `battery_v`, `armed`, `ready_to_arm`, `time_s`; no position, no speed |
+| | `frame` (`Frame`) | `frame.image`: NumPy `uint8` array (720, 1280, 3), **RGB**; `frame.seq`: picture number; about 18 per second |
+
+Every field, its type and unit, and exactly what reaches the flight
+controller: [guide page 3](docs/participants/3_writing_your_controller.md#what-reaches-the-flight-controller).
+
 ### From simulation to the real drone (sim2real)
 
 The same `my_controller.py` flies both. Only the connection underneath
@@ -634,14 +646,14 @@ Contact **Srinath Bhamidipati** at
 <details>
 <summary><b>For organisers</b></summary>
 
-Checks:
+Checks (run before a release and before judging):
 
 ```bash
 colcon test && colcon test-result --all
 ```
 
 ```bash
-python3 -m pytest hitl/tests
+python3 -m pytest -q evaluation/tests analysis/tests hitl/tests
 ```
 
 ```bash
@@ -652,20 +664,11 @@ The other end-to-end checks are in `simulation_engine/scripts/`
 (`check_mission.sh`, `check_yaw.sh`, `check_dynamics.sh`,
 `validate_legacy_sim.sh`).
 
-Technical documentation:
+Judging: evaluate every submission on one computer, over the same list of
+seeds the teams have not seen
+(`python3 evaluation/evaluate.py --controller <file> --seeds <list>`), and
+review the fair-play findings ([evaluation/README.md](evaluation/README.md#fair-play-organisers)).
 
-- [docs/architecture.md](docs/architecture.md): how it fits together, the
-  firmware findings (including the open altitude-hold question, finding
-  7), verification
-- [docs/arena.md](docs/arena.md): balloons, scoring, arena rules, camera,
-  the demo
-- [docs/pluto_x_parameters.md](docs/pluto_x_parameters.md): vehicle
-  parameters, sources and estimates
-- [hitl/README.md](hitl/README.md): the hardware backend, the MSP test
-  bridge, and the first-flight checklist
-- [simulation_engine/README.md](simulation_engine/README.md): the packages
-  and launch files
-- [.devcontainer/Dockerfile](.devcontainer/Dockerfile): the lean AVATIC
-  image
+Technical documents: see [Documentation](#documentation) above.
 
 </details>

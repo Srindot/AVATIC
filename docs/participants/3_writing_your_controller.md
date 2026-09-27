@@ -42,6 +42,13 @@ A `Command` has four numbers, like the two sticks of a remote control:
 **Fields you leave out are 0, including `throttle`.** `Command(pitch=0.2)`
 alone means "no lift": always set the throttle.
 
+**Format:** `from avatic_drone import Command`, then
+`Command(roll=0.1, pitch=0.2, yaw_rate=0.0, throttle=0.76)`: four plain
+Python numbers (`float`; an `int` works too), no units (they are stick
+positions, not degrees or m/s). They must be finite: `nan` or `inf` stops
+your controller with an error. A `Command` cannot be changed after it is
+made (make a new one each step).
+
 Useful numbers:
 
 - **Tilt:** `pitch` or `roll` 0.2 is about 7°, 0.4 is about 16°, and the
@@ -93,16 +100,23 @@ rate. Holding and changing height is part of the challenge.
 
 `telemetry` (a `Telemetry` object):
 
-| field | meaning |
-|---|---|
-| `altitude_m` | height above the take-off point, from the barometer (usually within 0.3 m of the true height) |
-| `heading_deg` | direction the nose points: 0 = north, 90 = east (the start), clockwise |
-| `roll_deg` | sideways tilt, + = right side down |
-| `pitch_deg` | forward tilt, **+ = nose up** (note: a positive `pitch` command gives a negative `pitch_deg`) |
-| `battery_v` | battery voltage |
-| `armed` | motors running |
-| `ready_to_arm` | the flight controller has finished its start-up calibration |
-| `time_s` | when this reading was taken |
+| field | type, unit | meaning |
+|---|---|---|
+| `altitude_m` | `float`, m | height above the take-off point, from the barometer (usually within 0.3 m of the true height) |
+| `heading_deg` | `float`, degrees 0 … 360 | direction the nose points: 0 = north, 90 = east (the start), clockwise |
+| `roll_deg` | `float`, degrees | sideways tilt, + = right side down |
+| `pitch_deg` | `float`, degrees | forward tilt, **+ = nose up** (note: a positive `pitch` command gives a negative `pitch_deg`) |
+| `battery_v` | `float`, V | battery voltage |
+| `armed` | `bool` | motors running |
+| `ready_to_arm` | `bool` | the flight controller has finished its start-up calibration |
+| `time_s` | `float`, s | when this reading was taken (simulation time) |
+
+`get_telemetry()` returns `None` before the first reading, then always the
+latest one: about 50 new readings per second in the simulator, 20 on the
+real drone (read over Wi-Fi). These are the flight controller's own
+**estimates** (its attitude filter and its barometer and accelerometer
+altitude), exactly what the real Pluto X reports; on the real drone they
+come in steps of 0.1° (tilt), 1° (heading), 1 cm and 1 mV.
 
 There is **no position and no speed.** You can estimate your climb rate
 from how `altitude_m` changes (the template does), and your heading
@@ -112,12 +126,12 @@ changes from `heading_deg`.
 
 `frame` (a `Frame` object, or `None` before the first picture):
 
-| field | meaning |
-|---|---|
-| `image` | NumPy array, shape (720, 1280, 3), `uint8`, **RGB** order |
-| `seq` | picture number: the same number means the same picture as last time |
-| `time_s` | when it was taken |
-| `width`, `height` | 1280, 720 |
+| field | type | meaning |
+|---|---|---|
+| `image` | `numpy.ndarray` | shape (720, 1280, 3) = (rows, columns, colour), `uint8` 0 … 255, **RGB** order; your own copy (you may draw on it) |
+| `seq` | `int` | picture number, from 1: the same number means the same picture as last time |
+| `time_s` | `float`, s | when it was taken (simulation time) |
+| `width`, `height` | `int` | 1280, 720 (pixels) |
 
 The camera makes about 18 pictures per second and `step()` runs 20 times
 per second, so often you get the same picture twice. Check `frame.seq`, as
@@ -128,6 +142,52 @@ the dev container; in a local setup install it with
 brings NumPy 2 and breaks ROS).
 
 More about the camera: [4. Camera and directions](4_camera_and_directions.md).
+
+## What reaches the flight controller
+
+Your `Command` is turned into the eight **RC channels** the Pluto X
+flight controller (MagisV2) reads from a remote control: pulse widths in
+microseconds (µs), 1000 … 2000, centre 1500. The same conversion is used
+in the simulator and on the real drone:
+
+| your field | after the safety cap | RC channel | µs | what the flight controller does with it |
+|---|---|---|---|---|
+| `roll` | ±0.6 | 1 (roll) | 1500 + 500 × roll | holds a **bank angle**: ~7° at 0.2, ~16° at 0.4, 20° max (from ~0.45) |
+| `pitch` | ±0.6 | 2 (pitch) | 1500 + 500 × pitch | holds a **pitch angle**, + = nose down, same angles as roll |
+| `throttle` | 0 … 0.95 | 3 (throttle) | 1000 + 1000 × throttle | **total thrust** of the four motors (no altitude hold) |
+| `yaw_rate` | ±0.8 | 4 (yaw) | 1500 + 500 × yaw_rate | holds a **turn rate**, ~77°/s per unit |
+| (set by `avatic_drone`) | | 5 (AUX1) | 2000 | no magnetometer or head-free mode |
+| (set by `avatic_drone`) | | 6 (AUX2) | 1000 | no developer mode |
+| (set by `avatic_drone`) | | 7 (AUX3) | 1000 | the firmware's altitude hold stays **off** |
+| (`arm()` / `disarm()`) | | 8 (AUX4) | 1500 / 1000 | armed / disarmed |
+
+Example: `Command(roll=0.2, pitch=0.3, yaw_rate=-0.5, throttle=0.8)`,
+armed, becomes `[1600, 1650, 1800, 1250, 2000, 1000, 1000, 1500]`.
+
+- The **angle mode** is always on: roll and pitch are angles the flight
+  controller holds, not rates. Inside, it runs its own attitude and rate
+  loops and the motor mixer, hundreds of times per second.
+- The channels are sent **50 times per second**; your last command is
+  repeated until you send a new one (you send 20 per second). In the
+  simulator they go to the simulated flight controller; on the real drone
+  as MSP messages (`MSP_SET_RAW_RC`) over Wi-Fi.
+- Nothing for 0.5 s: the failsafe takes over (see "Safety limits" above).
+
+In the other direction, the flight controller reports its status,
+attitude, altitude and battery (on the real drone: the MSP messages
+`MSP_STATUS`, `MSP_ATTITUDE`, `MSP_ALTITUDE` and `MSP_ANALOG`), and
+`avatic_drone` turns them into the `Telemetry` above, with the same units
+and signs in both. The camera video comes separately (in the simulator
+from the simulated camera, on the real drone from the Wi-Fi camera
+module) and becomes the `Frame`.
+
+| what | how often |
+|---|---|
+| your `step()` | 20 per second (`CONTROL_RATE_HZ` in the template) |
+| camera pictures | about 18 per second |
+| telemetry readings | about 50 per second (simulator), 20 (real drone) |
+| RC channels to the flight controller | 50 per second |
+| the flight controller's own loops | hundreds per second |
 
 ## Keeping memory between steps
 
@@ -151,8 +211,8 @@ The runner uses these; you can also write your own runner. They come from
 | `drone.get_frame()`, `drone.get_telemetry()` | the latest picture and readings |
 | `drone.send(command)` or `drone.send_command(roll=..., pitch=..., yaw_rate=..., throttle=...)` | fly |
 | `for step in drone.loop(hz=20): ...` | repeat at a steady rate until the time is up |
-| `drone.arena()` | `.score`, `.time_remaining_s`, `.finished`, `.events` (the pops so far) |
-| `drone.time()`, `drone.sleep(s)` | simulation time |
+| `drone.arena()` | `.score` (`int`), `.time_remaining_s` (`float`, s; `None` until the arena's first update), `.finished` (`bool`), `.events` (list of `str`: the pops so far) |
+| `drone.time()`, `drone.sleep(s)` | simulation time (`float`, s) |
 | `drone.close()` | stop and disconnect |
 
 `drone.arena().score` shows your points while flying. Use it for

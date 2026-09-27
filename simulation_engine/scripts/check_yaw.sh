@@ -17,7 +17,7 @@ set -euo pipefail
 
 # on any exit (error, Ctrl-C) never leave a simulation running
 SIM_PGID=""
-trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
+trap 'if [[ -n "${SIM_PGID}" ]]; then kill -KILL -- "-${SIM_PGID}" 2>/dev/null || true; fi' EXIT
 
 readonly SHUTDOWN_GRACE_S=10
 PREFIX="$(ros2 pkg prefix pluto_x_autonomy)"   # fails here (set -e) if not sourced

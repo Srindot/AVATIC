@@ -42,6 +42,12 @@ def step(self, frame, telemetry, t):   # t = seconds since arming (0 ... 25)
 | `telemetry.heading_deg` | 0 = north, 90 = east (start), clockwise |
 | `telemetry.roll_deg`, `.pitch_deg` | tilt (+ = right side down / nose up) |
 
+The four command values are plain numbers without units (stick
+positions). They become RC channels of 1000 … 2000 µs for the flight
+controller, 50 times per second. Every field with its type and unit, and
+exactly what the flight controller receives:
+[guide page 3](../docs/participants/3_writing_your_controller.md#what-reaches-the-flight-controller).
+
 | Balloon | green | blue | yellow | red |
 |---|---|---|---|---|
 | Points | +100 | +50 | +25 | **−75** |

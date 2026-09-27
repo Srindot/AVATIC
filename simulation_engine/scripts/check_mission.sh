@@ -15,7 +15,7 @@ set -euo pipefail
 
 # on any exit (error, Ctrl-C) never leave a simulation running
 SIM_PGID=""
-trap '[[ -n "${SIM_PGID}" ]] && kill -KILL -- "-${SIM_PGID}" 2>/dev/null; true' EXIT
+trap 'if [[ -n "${SIM_PGID}" ]]; then kill -KILL -- "-${SIM_PGID}" 2>/dev/null || true; fi' EXIT
 
 readonly OUT=log/mission
 readonly SHUTDOWN_GRACE_S=10
