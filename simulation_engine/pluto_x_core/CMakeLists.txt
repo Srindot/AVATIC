@@ -86,10 +86,15 @@ if(BUILD_TESTING)
     test/test_validation.cpp
     test/test_wind_model.cpp
   )
-  target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
+  target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME} yaml-cpp)
+  # the real balloon shape and vehicle contact outline (pluto_x_gazebo's
+  # arena files), for the pop-geometry tests in test_arena.cpp
+  set(PLUTO_X_GAZEBO_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../pluto_x_gazebo")
   target_compile_definitions(${PROJECT_NAME}_tests PRIVATE
     PLUTO_X_DEFAULT_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/config/legacy_kwad.yaml"
-    PLUTO_X_ESTIMATED_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/config/pluto_x_estimated.yaml")
+    PLUTO_X_ESTIMATED_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/config/pluto_x_estimated.yaml"
+    PLUTO_X_BALLOON_PROFILE="${PLUTO_X_GAZEBO_SRC}/models/balloon/profile.yaml"
+    PLUTO_X_ARENA_CONFIG="${PLUTO_X_GAZEBO_SRC}/config/arena_default.yaml")
 endif()
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)

@@ -30,7 +30,12 @@ ALLOWED_IMPORTS = {
     'random', 'heapq', 'bisect', 'copy', 'abc', 'argparse', 'sys', 'os', 'traceback',
     'logging', 'warnings', 'contextlib', '__future__', 'fractions', 'decimal', 'numbers',
     'string', 're', 'textwrap', 'pprint', 'json', 'queue', 'threading', 'types',
-    'datetime', 'csv',
+    'datetime', 'csv', 'yaml',
+    # learning-based and vision libraries (encouraged; model files are read with a
+    # 'review' note, fine for files in your own folder)
+    'torch', 'torchvision', 'torch_geometric', 'onnx', 'onnxruntime', 'sklearn',
+    'ultralytics', 'tensorflow', 'keras', 'skimage', 'PIL', 'numba', 'filterpy',
+    'networkx', 'shapely', 'joblib',
 }
 # imports that reach the simulator, other processes or the network
 FORBIDDEN_IMPORTS = {
@@ -38,8 +43,8 @@ FORBIDDEN_IMPORTS = {
     'ament_index_python', 'gz', 'ignition', 'sdformat', 'sdformat13', 'subprocess',
     'socket', 'socketserver', 'ssl', 'http', 'urllib', 'requests', 'ctypes', 'cffi',
     'multiprocessing', 'concurrent', 'pty', 'importlib', 'imp', 'runpy', 'zmq',
-    'cyclonedds', 'fastdds', 'signal', 'mmap', 'shutil', 'glob', 'pathlib', 'tempfile',
-    'pickle', 'marshal', 'shelve', 'base64', 'codecs', 'zlib', 'yaml', 'psutil', 'inspect',
+    'cyclonedds', 'fastdds', 'signal', 'mmap', 'shutil', 'glob', 'tempfile',
+    'marshal', 'shelve', 'base64', 'codecs', 'zlib', 'psutil', 'inspect',
     'builtins', 'gc',
 }
 FORBIDDEN_IMPORT_SUFFIXES = ('_msgs', '_srvs', '_interfaces')    # ROS message packages
@@ -175,7 +180,8 @@ class _Scanner(ast.NodeVisitor):
             self.add(node, 'forbidden', f'{name}(): runs code from text or hides which name '
                                         'is used')
         elif name in FILE_CALLS or (short in FILE_METHODS and name != short):
-            self.add(node, 'review', f'{name}(): reads a file (which one, and why?)')
+            self.add(node, 'review', f'{name}(): reads a file (fine for your own files, e.g. '
+                                     'model weights or parameters: say which in your report)')
         if name in ('os.environ.get', 'os.getenv') or (name or '').endswith('environ.get'):
             key = node.args[0] if node.args else None
             if not (isinstance(key, ast.Constant) and str(key.value).startswith('AVATIC_')):

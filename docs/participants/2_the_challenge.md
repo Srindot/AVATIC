@@ -86,8 +86,11 @@ telemetry, time, score), and send only `Command`s. Not allowed:
 - code that hides what it does (`exec`, `eval`, `__import__`, `getattr`
   with built-up names, encoded text).
 
-Your own files next to your controller (parameters, a colour table) are
-fine. It is checked twice: **the code** (`evaluation/check_controller.py`)
+Your own files next to your controller (parameters, a colour table, the
+weights of a model you trained) are fine, and so is any Python library:
+learning-based approaches are welcome (list any library the dev container
+does not have in `outerloop_controller/requirements.txt`, so the judges
+can install it). AI tools are allowed too; declare them in your report. It is checked twice: **the code** (`evaluation/check_controller.py`)
 and **the running controller** (the simulator watches its ROS
 connections, and, when the launch starts it with `controller:=...` as in
 judging, the libraries it loads, the files it opens and the programs it

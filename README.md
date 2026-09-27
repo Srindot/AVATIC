@@ -636,6 +636,14 @@ In short, all **required**:
 
 The deadline is **September 30, 11:59 PM** (where to upload will be announced by the organisers).
 
+### How teams are shortlisted
+
+Simulation score on hidden layouts **50 %**, ingenuity and technical
+depth **25 %**, real-hardware readiness **15 %**, analysis and report
+**10 %**; every deliverable and a clean fair-play check are required.
+Any method is welcome, learning-based ones included. Details:
+[DELIVERABLES.md](DELIVERABLES.md#how-you-are-judged-the-shortlist-for-the-final).
+
 ## Questions?
 
 Contact **Srinath Bhamidipati** at

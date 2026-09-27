@@ -126,10 +126,32 @@ more than a vague account of a strong one. Use these sections:
     there are any. Name any code, library or AI tool you used that you did
     not write yourself.
 
-## What the organisers do with it
+## How you are judged: the shortlist for the final
 
-- They **evaluate your code again themselves**, on layouts nobody has
-  seen, with the fair-play checks on (guide page 2, "Fair play"). Your own
-  evaluation shows how you tested; it is not your judged score.
-- They watch the video and read the report and the notebooks.
-- They read the code of every team that goes on to the hardware round.
+Only some teams go on to the final in the drone arena (October 3). They
+are chosen on four criteria:
+
+| Criterion | Weight | How it is measured |
+|---|---|---|
+| **Simulation score** | 50 % | the organisers' **own evaluation** of your code on layouts nobody has seen (mean score), not the numbers you report |
+| **Ingenuity, technical depth** | 25 % | your approach (perception, planning, control), from the report and the code: is it more than the baseline? |
+| **Real-hardware readiness** | 15 % | runs in real time; no hard-coded hover throttle; copes with video delay and real lighting; no simulator-only tricks |
+| **Analysis and report** | 10 % | failure cases, what did not work, honest results |
+
+- **Gate:** to be considered at all, every deliverable must be submitted
+  and the fair-play checks must be clean, or every finding explained.
+- **Tie-breakers:** fewer red balloons hit, then more consistent scores
+  across layouts.
+- **Anything goes** in how you solve it: learning-based models (a trained
+  detector, reinforcement learning), monocular mapping, memory of what
+  you have seen, planning. Any Python library, and your own files (model
+  weights, parameters) next to your controller in `outerloop_controller/`.
+  **List every library the dev container does not have** (for example
+  `torch`) in `outerloop_controller/requirements.txt`, with versions: the
+  organisers install exactly those to evaluate your code, and a controller
+  that does not start scores 0. Only the camera and the flight
+  controller's readings may be used (guide page 2, "Fair play").
+- **AI tools are allowed; declare them** in report section 11.
+
+The organisers also watch your video, read your report and notebooks, and
+read the code of every team that goes on to the final.

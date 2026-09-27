@@ -87,6 +87,7 @@
     \begin{enumerate}\setcounter{enumi}{5}
       \item Solution ideas (a starting point, not a solution)
       \item Sim2real: from the simulator to the real Pluto X
+      \item How teams are shortlisted
       \item Deadlines, once more
       \item Prizes
       \item Questions
@@ -558,6 +559,44 @@ python3 evaluation/evaluate.py \textbackslash
   \end{columns}
 \end{frame}
 
+\begin{frame}{Solution ideas: go further, anything goes}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+    \small\textbf{Allowed, and encouraged}
+    \begin{itemize}\footnotesize
+      \item \textbf{Learning-based models:} train a balloon detector
+            (a small CNN or YOLO on simulator images), learn a control
+            policy, try reinforcement learning in the simulator
+      \item \textbf{Monocular mapping and memory:} estimate each
+            balloon's position from its size and bearing in the image,
+            keep a map of what you saw while scanning
+      \item \textbf{Planning:} choose the order (green first, around the
+            red): a small travelling-salesman problem
+      \item \textbf{Visual odometry:} estimate your own motion from
+            the camera (there is no position reading)
+      \item Any Python library (NumPy, OpenCV, PyTorch, ONNX, \ldots;
+            extra ones in \code{requirements.txt}), and your own files
+            (model weights, parameters)
+    \end{itemize}
+    \column{0.46\textwidth}
+    \small\textbf{What still applies}
+    \begin{itemize}\footnotesize
+      \item Only the \textbf{camera} and the \textbf{flight controller's
+            readings}: no simulator ground truth (fair-play checks)
+      \item Runs in \textbf{real time} on a laptop (20 decisions/s)
+      \item Must work on the \textbf{real drone}: real lighting, video
+            delay, a different hover throttle; do not over-fit to the
+            simulator's clean images
+      \item AI tools are allowed: \textbf{declare} them in your report
+    \end{itemize}
+    \vspace{2mm}
+    \begin{alertblock}{}
+      \footnotesize Ingenuity counts for 25\,\% of the shortlist:
+      an interesting idea that scores a little less can still go through.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
 % ===========================================================================
 \section{Sim2real}
 \begin{frame}[fragile]{Sim2real: the same program on the real Pluto X}
@@ -615,6 +654,38 @@ python3 outerloop_controller/my_controller.py --hardware
     \end{enumerate}
     \column{0.43\textwidth}\centering
     \figOrBox{figures/arena_real.jpg}{\linewidth}{photo of the real arena\\(to be added)}
+  \end{columns}
+\end{frame}
+
+% ===========================================================================
+\section{Shortlisting}
+\begin{frame}{How teams are shortlisted for the final}
+  \centering\small
+  \begin{tabular}{@{}p{4.2cm}r p{7.6cm}@{}}
+    \toprule
+    \textbf{Criterion} & \textbf{Weight} & \textbf{How it is measured} \\
+    \midrule
+    Simulation score & 50\,\% & the organisers' own evaluation on
+      \textbf{hidden layouts} (mean score), not your own numbers \\
+    Ingenuity, technical depth & 25\,\% & your approach (perception,
+      planning, control): more than the baseline? \\
+    Real-hardware readiness & 15\,\% & real time, no hard-coded hover
+      throttle, copes with video delay and lighting, no simulator-only tricks \\
+    Analysis and report & 10\,\% & failure cases, what did not work,
+      honest results \\
+    \bottomrule
+  \end{tabular}\\[4mm]
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+    \begin{block}{Gate: required to be considered}
+      \footnotesize All deliverables submitted; the fair-play checks clean
+      (or every finding explained).
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{block}{Tie-breakers}
+      \footnotesize Fewer red balloons hit, then more consistent scores
+      across layouts.
+    \end{block}
   \end{columns}
 \end{frame}
 
