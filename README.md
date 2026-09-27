@@ -12,6 +12,7 @@ and score your algorithm.
 > (every command and option): **[workshop/manual.md](workshop/manual.md)**.
 > The workshop slides are in [workshop/presentation.pdf](workshop/presentation.pdf).
 > What to submit: **[DELIVERABLES.md](DELIVERABLES.md)**.
+> Lost? **[REPO_MAP.md](REPO_MAP.md)** says where to find what.
 
 ## The competition
 
@@ -195,6 +196,7 @@ AVATIC/
 │                            fair-play code check (check_controller.py)
 ├── output/                  your submission goes here (collect.py fills it)
 ├── DELIVERABLES.md          what to submit
+├── REPO_MAP.md              where to find what
 ├── docs/participants/       the step-by-step participant guide
 ├── workshop/                the manual (setup, usage) and the workshop slides
 ├── demo/                    a demo: a pre-planned route that pops all balloons
@@ -392,8 +394,9 @@ Check: `docker run --rm hello-world` works **without** `sudo`, and
 **NVIDIA card (optional).** The normal **Linux** container works on any
 computer (Gazebo draws with your usual graphics driver). To use an NVIDIA
 card instead, the NVIDIA driver must work (`nvidia-smi` prints your card;
-if not: `sudo ubuntu-drivers install` and reboot), and you need the NVIDIA
-Container Toolkit:
+if not: `sudo ubuntu-drivers install` and reboot), and you **must** install
+the NVIDIA Container Toolkit (without it the NVIDIA container does not
+start):
 
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
@@ -405,9 +408,11 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-Then choose **Linux + NVIDIA GPU** when opening the container. If it fails
-with `libnvidia-ml.so.1: cannot open shared object file`, the NVIDIA driver
-is missing: choose plain **Linux** instead.
+Then choose **Linux + NVIDIA GPU** when opening the container. To check it
+works, run `nvidia-smi` in the container's terminal: it must print your
+card (tested with an RTX 3050 Ti). If the container fails with
+`libnvidia-ml.so.1: cannot open shared object file`, the NVIDIA driver is
+missing: choose plain **Linux** instead.
 
 #### What to install: Windows (WSL2)
 
@@ -585,6 +590,7 @@ errors.
 
 | Document | What it covers |
 |---|---|
+| [REPO_MAP.md](REPO_MAP.md) | where to find what: a map of the repository |
 | [DELIVERABLES.md](DELIVERABLES.md) | what to submit, the video and report requirements, `output/collect.py` |
 | [workshop/manual.md](workshop/manual.md) | the in-depth manual: setup on [Ubuntu](workshop/manual/setup_ubuntu.md), [Windows](workshop/manual/setup_windows.md) and [macOS](workshop/manual/setup_macos.md), and [usage](workshop/manual/usage.md) (every command and option) |
 | [workshop/presentation.pdf](workshop/presentation.pdf) | the workshop slides |

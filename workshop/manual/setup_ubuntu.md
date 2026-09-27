@@ -80,7 +80,8 @@ usual graphics driver. Only if you want Gazebo to use an **NVIDIA** card:
    ```
 
    and restart.
-2. Install the NVIDIA Container Toolkit:
+2. Install the **NVIDIA Container Toolkit** (required: without it the
+   NVIDIA container does not start):
 
    ```bash
    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
@@ -93,6 +94,8 @@ usual graphics driver. Only if you want Gazebo to use an **NVIDIA** card:
    ```
 
 3. In step 6, choose **Linux + NVIDIA GPU** instead of **Linux**.
+4. Check it: in the container's terminal, `nvidia-smi` must print your
+   card (tested with an RTX 3050 Ti).
 
 ### 6. Open the container
 
