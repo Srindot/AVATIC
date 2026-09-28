@@ -3,8 +3,8 @@
 Everything goes in the **`output/`** folder of this repository. Most of it is
 collected for you by one command; you add the **video** and the **report**.
 **Deadline: September 30, 11:59 PM** (where to upload will be announced
-by the organisers). The shortlisted teams fly in the final in the drone
-arena on October 3.
+by the organisers). The shortlist is announced on **October 1**; the
+shortlisted teams fly in the final in the drone arena on October 3.
 
 ## Checklist
 

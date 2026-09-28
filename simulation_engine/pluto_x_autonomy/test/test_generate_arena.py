@@ -33,7 +33,7 @@ def test_layouts_satisfy_constraints():
         assert max(math.hypot(p[0], p[1]) for p in positions) <= 3.5 + 1e-6
         assert sorted(b['color'] for b in arena['balloons']) == \
             sorted(['yellow', 'yellow', 'blue', 'blue', 'red', 'red', 'green', 'green'])
-        assert arena['colors']['red']['points'] == -75  # rules come from the base
+        assert arena['colors']['red']['points'] == -300  # rules come from the base
 
 
 def test_reproducible_and_seed_dependent():

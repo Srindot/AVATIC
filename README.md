@@ -5,14 +5,26 @@ INFINIUM '26**. It has everything a team needs to take part: a simulator of
 the Pluto X drone, a ready-to-fill controller template, and tools to test
 and score your algorithm.
 
-> **In-depth manual:** step-by-step setup for
-> [Ubuntu](workshop/manual/setup_ubuntu.md),
-> [Windows](workshop/manual/setup_windows.md) and
-> [macOS](workshop/manual/setup_macos.md), and how to use everything
-> (every command and option): **[workshop/manual.md](workshop/manual.md)**.
-> The workshop slides are in [workshop/presentation.pdf](workshop/presentation.pdf).
-> What to submit: **[DELIVERABLES.md](DELIVERABLES.md)**.
-> Lost? **[REPO_MAP.md](REPO_MAP.md)** says where to find what.
+## Start here
+
+| Step | What to do | Where |
+|---|---|---|
+| **1. Set up** | install the simulator on your computer (Docker dev container recommended) | [Ubuntu](workshop/manual/setup_ubuntu.md) · [Windows](workshop/manual/setup_windows.md) · [macOS](workshop/manual/setup_macos.md) |
+| **2. Learn** | the rules, the commands, the camera: 7 short pages | [participant guide](docs/participants/README.md) |
+| **3. Write** | your code goes in `step()` of **`outerloop_controller/my_controller.py`** | [guide page 3](docs/participants/3_writing_your_controller.md) |
+| **4. Fly** | `ros2 launch pluto_x_bringup competition.launch.py controller:=outerloop_controller/my_controller.py` | [usage](workshop/manual/usage.md) |
+| **5. Improve** | look at a flight (`analysis/analysis.ipynb`), test on new layouts (`python3 evaluation/evaluate.py`) | [guide page 5](docs/participants/5_testing_and_improving.md) |
+| **6. Submit** | `python3 output/collect.py`, add your video and report, zip `output/` | [DELIVERABLES.md](DELIVERABLES.md) |
+
+Lost? **[REPO_MAP.md](REPO_MAP.md)** says where to find everything. Workshop
+slides: [workshop/presentation.pdf](workshop/presentation.pdf). Stuck on an
+error: [guide page 6](docs/participants/6_tips_and_troubleshooting.md).
+
+**Contents:** [The competition](#the-competition) ·
+[What this repository gives you](#what-this-repository-gives-you) ·
+[Setup](#setup-and-installation) · [Using the simulator](#using-the-simulator) ·
+[Documentation](#documentation) · [Submission](#submission) ·
+[Questions](#questions)
 
 ## The competition
 
@@ -23,7 +35,8 @@ and score your algorithm.
 | **Team size** | 2–4 members |
 | **Register** | [forms.gle/6x25JHhfRKqESipF8](https://forms.gle/6x25JHhfRKqESipF8), by **September 29, 11:59 PM** |
 | **September 27, 9:30 PM, H104** | pre-workshop and simulator access |
-| **September 30, 11:59 PM** | simulation round submission deadline; then shortlisting |
+| **September 30, 11:59 PM** | simulation round submission deadline |
+| **October 1** | shortlist for the final announced |
 | **October 3** | final: the shortlisted teams fly real drones in the drone arena |
 | **More events** | [felicity.iiit.ac.in/infinium/events](https://felicity.iiit.ac.in/infinium/events) |
 
@@ -35,7 +48,7 @@ commands back to the drone. Pop as many good balloons as you can in
 
 | Balloon | green | blue | yellow | red |
 |---|---|---|---|---|
-| Points | **+100** | **+50** | **+25** | **−75** (avoid) |
+| Points | **+100** | **+50** | **+25** | **−300** (avoid!) |
 
 There are **18 balloons**: 3 green, 5 blue, 6 yellow and 4 red (the
 high-value ones are the rarest), so the best possible score is **700**.
@@ -78,6 +91,9 @@ drone.
   <img src="images/rviz_image.png" width="80%" alt="RViz: the drone's camera, the flight path and the score">
 </p>
 <p align="center"><i>RViz during a run: the drone's camera (top left), its flight path, and the score.</i></p>
+
+<details>
+<summary><b>The drone, the camera and the sensors: specifications</b> (click to open)</summary>
 
 ### The drone: Pluto X
 
@@ -183,6 +199,8 @@ delay. All values are in
 [`simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml`](simulation_engine/pluto_x_core/config/pluto_x_estimated.yaml),
 with their sources in [docs/pluto_x_parameters.md](docs/pluto_x_parameters.md).
 
+</details>
+
 ### Project structure
 
 ```text
@@ -254,6 +272,9 @@ What goes in and out of your `step(frame, telemetry, t)`:
 Every field, its type and unit, and exactly what reaches the flight
 controller: [guide page 3](docs/participants/3_writing_your_controller.md#what-reaches-the-flight-controller).
 
+<details>
+<summary><b>From simulation to the real drone (sim2real)</b> (click to open)</summary>
+
 ### From simulation to the real drone (sim2real)
 
 The same `my_controller.py` flies both. Only the connection underneath
@@ -279,6 +300,8 @@ The simulator includes wind, battery drain, sensor noise and the real
 firmware, so a controller that works reliably in simulation has a good
 chance on hardware. The main differences on the real drone are the video
 delay and the lighting.
+
+</details>
 
 ## Setup and installation
 
@@ -307,6 +330,9 @@ Then choose **one** of the two ways to set it up:
   (`wsl --install -d Ubuntu-22.04`), then follow either option inside it.
 - **macOS:** install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
   and use Option 2.
+
+<details>
+<summary><b>Option 1: local setup (Ubuntu 22.04)</b> (click to open)</summary>
 
 ### Option 1: local setup (Ubuntu 22.04)
 
@@ -366,6 +392,8 @@ Then choose **one** of the two ways to set it up:
 Then open `outerloop_controller/my_controller.py` and start writing your
 outer loop.
 
+</details>
+
 ### Option 2: Docker dev container
 
 The dev container is a ready-made Ubuntu 22.04 with ROS 2, Gazebo and
@@ -376,6 +404,9 @@ install the tools below on your own computer.
 1 GB download and 5 GB on disk, plus the simulator build), **8 GB of
 RAM** (16 GB is better), and a good internet connection for the first
 start.
+
+<details>
+<summary><b>What to install on your computer: Linux, Windows, macOS</b> (click to open)</summary>
 
 #### What to install: Linux (Ubuntu)
 
@@ -450,6 +481,8 @@ In Docker Desktop → *Settings → Resources*, give Docker at least **8 GB of
 memory**. On a Mac, Gazebo draws without the GPU, so the windows are
 slower than on Linux; runs with `headless:=true rviz:=false` are not
 affected.
+
+</details>
 
 #### Open the container
 

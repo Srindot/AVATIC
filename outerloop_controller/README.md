@@ -50,7 +50,7 @@ exactly what the flight controller receives:
 
 | Balloon | green | blue | yellow | red |
 |---|---|---|---|---|
-| Points | +100 | +50 | +25 | **−75** |
+| Points | +100 | +50 | +25 | **−300** |
 | How many | 3 | 5 | 6 | 4 |
 
 25 s from arming, 18 balloons. The best possible score is 700.

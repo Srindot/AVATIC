@@ -27,7 +27,7 @@ COLOURS = runlog.BALLOON_COLOURS
 
 def _points():
     """Points per colour, from the arena config (the official rules)."""
-    points = {'green': 100, 'blue': 50, 'yellow': 25, 'red': -75}
+    points = {'green': 100, 'blue': 50, 'yellow': 25, 'red': -300}
     colours = (runlog._load_yaml(runlog.RULES_FILE) or {}).get('colors', {})
     points.update({c: int(v['points']) for c, v in colours.items() if c in points})
     return points

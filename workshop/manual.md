@@ -5,7 +5,7 @@ setup page for your computer, then read the usage page.
 
 **DRONE ARENA @ Infinium:** teams of 2–4, prizes worth ₹20,000. Register
 by **September 29, 11:59 PM** ([form](https://forms.gle/6x25JHhfRKqESipF8)).
-Simulation submission: **September 30, 11:59 PM**, then the shortlist. Final in the drone
+Simulation submission: **September 30, 11:59 PM**; shortlist: **October 1**. Final in the drone
 arena: **October 3**. Details: [README](../README.md#the-competition).
 
 ## 1. Set up

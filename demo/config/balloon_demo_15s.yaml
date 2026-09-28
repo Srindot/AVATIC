@@ -4,8 +4,8 @@
 #
 # Balloons (pluto_x_gazebo config/arena_default.yaml, index: colour, points,
 # ENU position):
-#   0 yellow 25 ( 1.5,  0.5, 1.0)    4 red  -75 ( 0.5,  2.8, 1.4)  PENALTY
-#   1 yellow 25 (-1.2,  1.0, 0.9)    5 red  -75 (-2.8, -0.6, 1.5)  PENALTY
+#   0 yellow 25 ( 1.5,  0.5, 1.0)    4 red -300 ( 0.5,  2.8, 1.4)  PENALTY
+#   1 yellow 25 (-1.2,  1.0, 0.9)    5 red -300 (-2.8, -0.6, 1.5)  PENALTY
 #   2 blue   50 ( 2.2, -1.2, 1.3)    6 green 100 ( 3.6,  1.8, 1.8)
 #   3 blue   50 (-0.8, -2.0, 1.1)    7 green 100 (-2.4, -3.0, 1.9)
 # SHORT variant (15 s; the competition limit is 25 s):
@@ -13,7 +13,7 @@
 #       route_file:=$(ros2 pkg prefix pluto_x_demo)/share/pluto_x_demo/config/balloon_demo_15s.yaml
 # ~4 s of the run go to the firmware start-up. Route blue 3 -> green 7
 # (150 points, both behind the start heading, >= 2.2 m from both red
-# balloons): the best that fits without popping a red (-75) balloon.
+# balloons): the best that fits without popping a red (-300) balloon.
 arena_config: ''          # '' = pluto_x_gazebo config/arena_default.yaml
 route: [3, 7]             # blue, green (red is a penalty: avoided)
 takeoff_height_m: 0.5     # climb straight up first (no tilt/yaw on the ground)

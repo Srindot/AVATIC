@@ -51,13 +51,13 @@ balloon:
   diameter_m: 0.30
 
 colors:
-  red:    {points: -75, rgba: [0.85, 0.05, 0.05, 1.0]}   # PENALTY: do not pop
+  red:    {points: -300, rgba: [0.85, 0.05, 0.05, 1.0]}   # PENALTY: do not pop
   yellow: {points: 25,  rgba: [0.95, 0.80, 0.05, 1.0]}
   blue:   {points: 50,  rgba: [0.05, 0.25, 0.90, 1.0]}
   green:  {points: 100, rgba: [0.05, 0.65, 0.10, 1.0]}
 
 # Two of each colour, spread around the take-off point at different
-# distances, bearings and heights. Red balloons are PENALTIES (-75): they
+# distances, bearings and heights. Red balloons are PENALTIES (-300): they
 # are obstacles to avoid. Best achievable score in THIS demo layout: 350
 # (competition layouts use the counts in `competition:` above). Higher-value
 # balloons are farther and

@@ -4,13 +4,13 @@
 #
 # Balloons (pluto_x_gazebo config/arena_default.yaml, index: colour, points,
 # ENU position):
-#   0 yellow 25 ( 1.5,  0.5, 1.0)    4 red  -75 ( 0.5,  2.8, 1.4)  PENALTY
-#   1 yellow 25 (-1.2,  1.0, 0.9)    5 red  -75 (-2.8, -0.6, 1.5)  PENALTY
+#   0 yellow 25 ( 1.5,  0.5, 1.0)    4 red -300 ( 0.5,  2.8, 1.4)  PENALTY
+#   1 yellow 25 (-1.2,  1.0, 0.9)    5 red -300 (-2.8, -0.6, 1.5)  PENALTY
 #   2 blue   50 ( 2.2, -1.2, 1.3)    6 green 100 ( 3.6,  1.8, 1.8)
 #   3 blue   50 (-0.8, -2.0, 1.1)    7 green 100 (-2.4, -3.0, 1.9)
 # The drone starts at the origin facing +x (east). ~4 s of the run go to
 # the firmware start-up. balloon_demo.launch.py runs the demo for 35 s
-# (time_limit_s). RED BALLOONS ARE PENALTIES (-75): the route visits the
+# (time_limit_s). RED BALLOONS ARE PENALTIES (-300): the route visits the
 # six others (350 points, the best achievable) in the shortest order,
 # 17.5 m and ~385 deg of turning, and every leg passes at least 1.08 m from
 # both red balloons (red 4 and red 5 are obstacles, not targets).

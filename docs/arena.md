@@ -14,8 +14,8 @@ Status 2026-09-27. Launches: `competition.launch.py` (participant runs: seeded r
 | Forward camera on the Pluto X | vehicle YAML `camera:` section → model xacro |
 | RViz: camera image + ground-truth odometry | `pluto_x_bringup/rviz/arena.rviz` |
 
-Points: **green 100, blue 50, yellow 25, and red −75 (a penalty)**. Red
-balloons are obstacles: popping one subtracts 75 points. Competition
+Points: **green 100, blue 50, yellow 25, and red −300 (a penalty)**. Red
+balloons are obstacles: popping one subtracts 300 points. Competition
 layouts have 18 balloons (green 3, blue 5, yellow 6, red 4; best 700; see
 "Competition rules" below). The default (demo) layout here has two of each
 colour; its best achievable score is **350**
@@ -66,6 +66,11 @@ and the per-colour counts from this file.
   the same spacing rules (mean nearest-balloon spacing 0.83 m). Cost:
   evaluation runs take about 40 s each, and the hardware round needs 18
   balloons per layout.
+* **Red penalty −300** (was −75; decided 2026-09-28). At −75 a red hit
+  cost less than one green, so flying straight through clusters paid off.
+  At −300 one red hit wipes out three greens: avoiding the red balloons,
+  the obstacles of this challenge, now matters as much as finding the good
+  ones. The best score stays 700; a run can now end below 0.
 * **Every competition layout has the official composition** (so every
   layout offers the same 700 points); where the balloons float and which
   one has which colour come from the seed. The analysis and evaluation
@@ -147,7 +152,7 @@ balloon colours are visible in the camera images. Result on 2026-09-24:
 | 0.001 s | run clock started | 0 |
 | 6.91 s | POP yellow +25 | 25 |
 | 9.67 s | POP blue +50 | 75 |
-| 15.001 s | TIME UP, world paused | 75 (the maximum was 500 then; with red now a −75 penalty it is 350) |
+| 15.001 s | TIME UP, world paused | 75 (the maximum was 500 then; with red a penalty the demo layout's best is 350) |
 
 The popped balloons' models were gone from the world afterwards. The
 camera ran at 18.0 Hz (1280×720). Arena logic unit tests: `pluto_x_core` `test_arena.cpp`.

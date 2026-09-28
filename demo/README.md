@@ -1,7 +1,7 @@
 # Workshop demo ("hero" simulation)
 
 The Pluto X takes off, turns to face each balloon, flies into it, and pops
-every non-red balloon, scoring 350 / 350. Red balloons (−75) are avoided
+every non-red balloon, scoring 350 / 350. Red balloons (−300) are avoided
 with at least 1 m of clearance. The run lasts 35 s and ends with the
 results table.
 

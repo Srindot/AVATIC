@@ -34,8 +34,8 @@ everything else you run, read or leave alone.
 | `evaluation/` | the evaluation, its notebook, the fair-play code check | run |
 | `output/` | your submission (filled by `collect.py`, plus your video and report) | fill, then zip |
 | `docs/participants/` | the participant guide | read |
-| `workshop/` | the manual (setup, usage) and the slides | read |
-| `docs/` | technical documents: architecture, arena, vehicle parameters | read if curious |
+| `workshop/` | the manual (setup, usage) and the slides ([README](workshop/README.md)) | read |
+| `docs/` | technical documents: architecture, arena, vehicle parameters ([README](docs/README.md)) | read if curious |
 | `demo/` | a demo that pops balloons along a planned route | run to watch |
 | `simulation_engine/` | the simulator | leave alone |
 | `firmware/magisv2/` | the drone's real flight-controller firmware | leave alone |

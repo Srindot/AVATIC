@@ -1,7 +1,8 @@
 # 7. The real drone
 
 The final is on **October 3** in the drone arena, for the teams shortlisted
-from the simulation round (submissions close September 30, 11:59 PM). The same `my_controller.py`
+from the simulation round (submissions close September 30, 11:59 PM;
+shortlist on October 1). The same `my_controller.py`
 flies the real Pluto X. You change nothing in
 your code: the runner connects to the drone over Wi-Fi instead of the
 simulator.

@@ -10,7 +10,7 @@ controller's readings**. Pop the good ones, avoid the red ones.
 | green | **+100** | 3 |
 | blue | **+50** | 5 |
 | yellow | **+25** | 6 |
-| red | **−75**: avoid it | 4 |
+| red | **−300**: avoid it | 4 |
 
 - Best possible score: **700** (all green, blue and yellow, no red).
 - The rarest balloons are worth the most. There are more good balloons
@@ -128,6 +128,6 @@ In short, all **required**:
    (perception, decision and red-balloon avoidance, control), results,
    analysis and at least two failure cases.
 
-The deadline is **September 30, 11:59 PM** (where to upload will be announced by the organisers). The shortlisted teams fly in the final on October 3, in the drone arena.
+The deadline is **September 30, 11:59 PM** (where to upload will be announced by the organisers). The shortlist is announced on **October 1**; the shortlisted teams fly in the final on October 3, in the drone arena.
 
 **Next:** [3. Writing your controller](3_writing_your_controller.md)

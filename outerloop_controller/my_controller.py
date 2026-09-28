@@ -12,7 +12,7 @@ On the REAL Pluto X (join the camera module's Wi-Fi first):
     python3 outerloop_controller/my_controller.py --hardware
 
 Task: pop green (+100), blue (+50) and yellow (+25) balloons by touching
-them; red balloons are -75 (avoid them). 25 s from the moment the drone
+them; red balloons are -300 (avoid them). 25 s from the moment the drone
 arms. Each simulator launch places the balloons from a seed: by default
 the fixed development seed in analysis/seed.yaml (the same layout every
 run, for tuning); `arena_seed:=random` gives a new layout, and

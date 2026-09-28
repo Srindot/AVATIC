@@ -8,7 +8,7 @@
 //    spheres approximate the vehicle's outline (guards, body, camera) in
 //    its body frame and move and rotate with it
 //  * a popped balloon scores the points of its colour, once; points may be
-//    negative (penalty balloons, e.g. red = -75), so the total can drop
+//    negative (penalty balloons, e.g. red = -300), so the total can drop
 //  * the run clock starts at clock_start_s (simulation start, or when the
 //    vehicle arms, chosen by the caller); the run ends when
 //    time - clock_start_s >= time_limit_s. Contacts at or after the end do
